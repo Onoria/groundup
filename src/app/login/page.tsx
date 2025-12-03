@@ -1,3 +1,5 @@
+'use client'
+
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase'
@@ -17,6 +19,7 @@ export default function Login() {
           theme="dark"
           providers={[]}
           view="sign_in"
+          redirectTo="/onboarding/role"   // ← THIS IS THE KEY LINE
         />
       </div>
     </div>
