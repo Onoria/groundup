@@ -5,9 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c9cfb095-c368-4c97-acee-215de6211c2d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/app/queue/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/(auth)/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/(auth)/signup/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/app/onboarding/role/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/onboarding/role/page.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lib/supabase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/supabase.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -91,7 +94,7 @@
       <workItem from="1764719648276" duration="1883000" />
       <workItem from="1764722374056" duration="150000" />
       <workItem from="1764722570183" duration="928000" />
-      <workItem from="1764723522417" duration="1191000" />
+      <workItem from="1764723522417" duration="6973000" />
     </task>
     <servers />
   </component>
