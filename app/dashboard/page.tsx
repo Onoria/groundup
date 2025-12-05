@@ -1,4 +1,5 @@
-import { auth, currentUser, redirect } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 
