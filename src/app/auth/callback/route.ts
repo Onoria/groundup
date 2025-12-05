@@ -28,10 +28,9 @@ export async function GET(request: Request) {
         },
       }
     )
-
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // FIXED: Go to /welcome for "close tab" flow
+  // THIS LINE IS THE FIX — redirect to /welcome, not /onboarding/role
   return NextResponse.redirect(new URL('/welcome', request.url))
 }
