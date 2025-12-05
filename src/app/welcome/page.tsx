@@ -7,7 +7,7 @@ export default function Welcome() {
       <div className="text-center max-w-md">
         <h1 className="text-6xl font-black text-emerald-400 mb-8">Welcome to GroundUp</h1>
         <p className="text-xl text-zinc-300 mb-12">
-          Thanks for signing up! You're now in the queue for your perfect co-founder raid party.
+          Thanks for signing up! You're now logged in and ready to assemble your co-founder raid party.
         </p>
         <div className="space-y-6">
           <Link
@@ -17,7 +17,7 @@ export default function Welcome() {
             Go to Role Selection →
           </Link>
           <p className="text-sm text-zinc-500">
-            Your main tab is already logged in.<br />
+            Your main tab is already logged in and waiting.<br />
             <strong>You can close this window now.</strong>
           </p>
         </div>

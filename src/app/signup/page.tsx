@@ -11,15 +11,19 @@ export default function Signup() {
   const router = useRouter()
 
   useEffect(() => {
-    // FIXED: Initial session check + listener for reliable redirect
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace('/onboarding/role')
-    })
+    // FIXED: Force initial session check + listener for reliable redirect
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.replace('/onboarding/role')
+      }
+    }
+    checkSession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         router.replace('/onboarding/role')
-        router.refresh()  // Force re-render to update layout
+        router.refresh()  // Force layout re-render for logout button
       }
     })
 

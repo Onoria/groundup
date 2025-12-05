@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
 
   if (code) {
@@ -28,9 +28,10 @@ export async function GET(request: Request) {
         },
       }
     )
+
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // FIXED: Redirect to /welcome for "close tab" flow
-  return NextResponse.redirect(`${origin}/welcome`)
+  // FIXED: Go to /welcome for "close tab" flow
+  return NextResponse.redirect(new URL('/welcome', request.url))
 }
