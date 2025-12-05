@@ -6,10 +6,17 @@ const isProtectedRoute = createRouteMatcher([
   '/team(.*)',
 ])
 
-export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) auth().protect
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth().protect()
+  }
 })
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    // Skip Next.js internals and static files, unless found in search params
+    '/((?!.*\\..*|_next).*)',
+    '/',
+    '/(api|trpc)(.*)',
+  ],
 }
