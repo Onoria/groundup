@@ -1,6 +1,41 @@
 // src/lib/supabase/server.ts
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import 'server-only'
+
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export const createServerSupabaseClient = () =>
-  createServerComponentClient({ cookies })
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {
+            // Called from a Server Component – safe to ignore if middleware/Proxy
+            // is keeping sessions in sync.
+          }
+        },
+        removeAll(cookiesToRemove) {
+          try {
+            cookiesToRemove.forEach(({ name, options }) => {
+              cookieStore.delete(name, options)
+            })
+          } catch {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
+        },
+      },
+    },
+  )
+}
