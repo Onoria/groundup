@@ -13,6 +13,9 @@ export default function Signup() {
         <h1 className="text-4xl font-black text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
           GroundUp
         </h1>
+        <div className="bg-yellow-900/50 border border-yellow-600 p-4 rounded mb-6 text-yellow-200 text-sm">
+          <strong>DEBUG:</strong> If signup works, you should be redirected to /onboarding/role/selection
+        </div>
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
