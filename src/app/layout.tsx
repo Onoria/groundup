@@ -10,10 +10,8 @@ export default async function RootLayout({
 }: {
   children: ReactNode
 }) {
-  const supabase = createClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
 
   return (
     <html lang="en">
