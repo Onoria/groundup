@@ -15,16 +15,14 @@ export const createServerSupabaseClient = () =>
           try {
             cookies().set(name, value, options)
           } catch {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
+            // Ignored in server components
           }
         },
         remove(name: string, options: any) {
           try {
-            cookies().delete(name, options)
+            cookies().delete(name)
           } catch {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing user sessions.
+            // Ignored in server components
           }
         },
       },
