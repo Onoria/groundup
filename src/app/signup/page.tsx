@@ -18,7 +18,7 @@ export default function Signup() {
           appearance={{ theme: ThemeSupa }}
           theme="dark"
           providers={[]}
-          redirectTo="/onboarding/role"
+          redirectTo="/onboarding/role/selection"
           showLinks={false}
         />
       </div>

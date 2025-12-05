@@ -15,7 +15,7 @@ export default function Home() {
         <div className="mt-16">
           <Link
             href="/signup"
-            className="inline-block bg-emerald-600 hover:bg-emerald-500 px-16 py-6 text-2xl rounded-xl font-bold transition shadow-2xl"
+            className="bg-emerald-600 hover:bg-emerald-500 px-16 py-6 text-2xl rounded-xl font-bold transition shadow-2xl"
           >
             Start Matching – $49/mo
           </Link>
