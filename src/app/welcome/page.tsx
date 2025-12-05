@@ -1,24 +1,25 @@
-// src/app/welcome/page.tsx   ← SERVER COMPONENT (no 'use client')
+// src/app/welcome/page.tsx   ← SERVER COMPONENT
 import Link from 'next/link'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export default async function Welcome() {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()  // ← THIS LINE FIXED (await cookies())
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: {
-      get: (name) => cookieStore.get(name)?.value,
-      set: (name, value, options) => cookieStore.set(name, value, options),
-      remove: (name, options) => cookieStore.delete(name),
-    }}
+    {
+      cookies: {
+        get: (name) => cookieStore.get(name)?.value,
+        set: (name, value, options) => cookieStore.set(name, value, options),
+        remove: (name) => cookieStore.delete(name),
+      },
+    }
   )
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // If somehow no session (edge case), send to signup
   if (!session) redirect('/signup')
 
   return (
