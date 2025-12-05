@@ -1,27 +1,30 @@
 'use client'
 
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 export default function Signup() {
   const supabase = createClient()
+  const router = useRouter()
+
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // This fires for BOTH magic link AND email confirmation
+        router.replace('/onboarding/role')
+      }
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [router, supabase])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md">
-        <h1 className="mb-8 text-center text-4xl font-bold text-white">GroundUp</h1>
-        <div className="rounded-lg bg-gray-800 p-8 shadow-xl">
-          <Auth
-            supabaseClient={supabase}
-            view="magic_link"
-            appearance={{ theme: ThemeSupa }}
-            theme="dark"
-            showLinks={true}
-            providers={[]}
-            redirectTo="http://localhost:3000/onboarding/role"
-          />
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center p-8">
+      <div className="text-center">
+        <h1 className="text-6xl font-black text-emerald-400 mb-8">GroundUp</h1>
+        <p className="text-2xl text-white mb-8">Check your email for the magic link</p>
+        <div className="animate-spin w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto" />
       </div>
     </div>
   )
