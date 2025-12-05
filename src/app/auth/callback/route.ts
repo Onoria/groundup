@@ -9,6 +9,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
 
+  let response = NextResponse.next()
+
   if (code) {
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -18,19 +20,18 @@ export async function GET(request: Request) {
         cookies: {
           get: (name: string) => cookieStore.get(name)?.value,
           set: (name: string, value: string, options: any) => {
-            cookieStore.set({ name, value, ...options })
+            response.cookies.set(name, value, options)
           },
           remove: (name: string, options: any) => {
-            cookieStore.delete({ name, ...options })
+            response.cookies.delete(name)
           },
         },
       }
     )
+
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // THIS IS THE MAGIC LINE
-  const response = NextResponse.redirect(new URL('/welcome', request.url))
-  response.headers.set('Cache-Control', 'no-store')  // ← THIS FIXES THE LOOP
-  return response
+  // This is the magic — we return the response with cookies, then redirect
+  return NextResponse.redirect(new URL('/welcome', request.url), { headers: response.headers })
 }
