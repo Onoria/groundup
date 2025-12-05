@@ -1,24 +1,19 @@
+// src/app/page.tsx
 import Link from 'next/link'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-white">
-      <div className="container mx-auto px-6 pt-24 pb-32 text-center">
-        <h1 className="text-6xl md:text-8xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-          GroundUp
-        </h1>
-        <p className="mt-8 text-xl md:text-3xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-          Form balanced founding teams for tech startups or blue-collar empires.
-        </p>
-        <div className="mt-16">
-          <Link
-            href="/signup"
-            className="bg-emerald-600 hover:bg-emerald-500 px-16 py-6 text-2xl rounded-xl font-bold transition shadow-2xl"
-          >
-            Start Matching – $49/mo
-          </Link>
-        </div>
-      </div>
-    </main>
+    <section className="space-y-4">
+      <h1 className="text-3xl font-bold">GroundUp</h1>
+      <p className="text-lg text-gray-600">
+        Form balanced founding teams for tech startups or blue-collar empires.
+      </p>
+      <Link
+        href="/signup"
+        className="inline-flex rounded-md border px-4 py-2 text-sm"
+      >
+        Start Matching – $49/mo
+      </Link>
+    </section>
   )
 }

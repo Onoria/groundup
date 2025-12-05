@@ -1,40 +1,49 @@
 // src/app/layout.tsx
 import './globals.css'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import type { ReactNode } from 'react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
-  const supabase = createServerSupabaseClient()
-  const { data: { session } } = await supabase.auth.getSession()
+  const supabase = await createServerSupabaseClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full bg-black text-white">
-        <div className="min-h-screen flex flex-col">
-          <header className="border-b border-zinc-800">
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <Link
-                href="/"
-                className="text-4xl font-black text-emerald-400 hover:text-emerald-300 transition"
-              >
-                GroundUp
-              </Link>
-
-              {session && <LogoutButton />}
+    <html lang="en">
+      <body>
+        <header className="border-b">
+          <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+            <Link href="/" className="font-semibold">
+              GroundUp
+            </Link>
+            <div className="flex items-center gap-3 text-sm">
+              {session ? (
+                <>
+                  <span className="text-gray-500">
+                    {session.user.email ?? 'Signed in'}
+                  </span>
+                  <LogoutButton />
+                </>
+              ) : (
+                <>
+                  <Link href="/signup">Sign up</Link>
+                  <Link href="/login">Log in</Link>
+                </>
+              )}
             </div>
-          </header>
-
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
+          </nav>
+        </header>
+        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
       </body>
     </html>
   )

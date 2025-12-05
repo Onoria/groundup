@@ -1,33 +1,31 @@
 // src/lib/supabase/server.ts
-import { createServerClient } from '@supabase/auth-helpers-nextjs'
+import 'server-only'
+
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export const createServerSupabaseClient = () =>
-  createServerClient(
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        async get(name: string) {
-          const cookieStore = await cookies()
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll()
         },
-        async set(name: string, value: string, options: any) {
-          const cookieStore = await cookies()
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set(name, value, options)
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
           } catch {
-            // Ignored in server components
-          }
-        },
-        async remove(name: string, options: any) {
-          const cookieStore = await cookies()
-          try {
-            cookieStore.delete(name)
-          } catch {
-            // Ignored in server components
+            // Called from a Server Component – safe to ignore if middleware/Proxy
+            // is keeping sessions in sync.
           }
         },
       },
-    }
+    },
   )
+}
