@@ -10,21 +10,26 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
 
   if (code) {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()  // ← await here
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) { return cookieStore.get(name)?.value },
-          set(name: string, value: string, options: any) { cookieStore.set({ name, value, ...options }) },
-          remove(name: string, options: any) { cookieStore.delete({ name, ...options }) },
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set(name, value, options)
+          },
+          remove(name: string, options?: any) {
+            cookieStore.delete(name)
+          },
         },
       }
     )
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // This is the magic: redirect to a clean "welcome" page instead of home
   return NextResponse.redirect(`${origin}/welcome`)
 }
