@@ -1,30 +1,26 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase'
 
 export default function Signup() {
   const supabase = createClient()
-  const router = useRouter()
-
-  useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // Force immediate redirect — no delay
-        router.replace('/onboarding/role')
-      }
-    })
-
-    return () => listener.subscription.unsubscribe()
-  }, [router, supabase])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center p-8">
-      <div className="text-center">
-        <h1 className="text-6xl font-black text-emerald-400 mb-8">GroundUp</h1>
-        <p className="text-2xl text-white mb-8">Creating your account…</p>
-        <div className="animate-spin w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto" />
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center px-6">
+      <div className="max-w-md w-full bg-slate-800/50 backdrop-blur rounded-2xl p-10 border border-slate-700">
+        <h1 className="text-4xl font-black text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+          GroundUp
+        </h1>
+        <Auth
+          supabaseClient={supabase}
+          appearance={{ theme: ThemeSupa }}
+          theme="dark"
+          providers={[]}
+          redirectTo="/onboarding/role"
+          showLinks={false}
+        />
       </div>
     </div>
   )
