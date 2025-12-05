@@ -21,6 +21,7 @@ export default function Login() {
           view="sign_in"
           redirectTo="/onboarding/role"
           showLinks={false}
+          onlyThirdPartyProviders={false}
         />
       </div>
     </div>
