@@ -11,7 +11,9 @@ export default async function RootLayout({
   children: ReactNode
 }) {
   const supabase = createClient()
-  const { data: { session } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
   return (
     <html lang="en">
@@ -25,7 +27,7 @@ export default async function RootLayout({
                 </Link>
               </div>
               <div className="flex items-center space-x-4">
-                {session?.session ? (
+                {session ? (
                   <LogoutButton />
                 ) : (
                   <Link href="/signin" className="text-gray-700 hover:text-gray-900">
