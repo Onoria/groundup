@@ -31,6 +31,6 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // This is the fix: go to /welcome, not /
+  // FIXED: Redirect to /welcome for "close tab" flow
   return NextResponse.redirect(`${origin}/welcome`)
 }

@@ -7,17 +7,17 @@ export default function Welcome() {
       <div className="text-center max-w-md">
         <h1 className="text-6xl font-black text-emerald-400 mb-8">Welcome to GroundUp</h1>
         <p className="text-xl text-zinc-300 mb-12">
-          You're logged in and ready to find your co-founders.
+          Thanks for signing up! You're now in the queue for your perfect co-founder raid party.
         </p>
         <div className="space-y-6">
           <Link
             href="/onboarding/role"
-            className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-10 rounded-xl text-lg transition"
+            className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-10 rounded-xl text-lg transition"
           >
-            Continue to Role Selection →
+            Go to Role Selection →
           </Link>
           <p className="text-sm text-zinc-500">
-            Your other tab is already logged in.<br />
+            Your main tab is already logged in.<br />
             <strong>You can close this window now.</strong>
           </p>
         </div>

@@ -1,4 +1,4 @@
-'use client'  // Client for Auth UI interactivity
+'use client'
 
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
@@ -11,10 +11,15 @@ export default function Signup() {
   const router = useRouter()
 
   useEffect(() => {
-    // Redirect if already signed in
+    // FIXED: Initial session check + listener for reliable redirect
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace('/onboarding/role')
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         router.replace('/onboarding/role')
+        router.refresh()  // Force re-render to update layout
       }
     })
 
@@ -32,7 +37,7 @@ export default function Signup() {
             supabaseClient={supabase}
             view="magic_link"
             redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`}
-            showLinks={true}  // Enables "Already have an account? Sign in"
+            showLinks={true}
             providers={[]}
             theme="dark"
             appearance={{
