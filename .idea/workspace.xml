@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c9cfb095-c368-4c97-acee-215de6211c2d" name="Changes" comment="" />
+    <list default="true" id="c9cfb095-c368-4c97-acee-215de6211c2d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/app/auth/actions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/auth/actions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/supabase/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/supabase/server.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -89,7 +92,7 @@
       <workItem from="1764722570183" duration="928000" />
       <workItem from="1764723522417" duration="9409000" />
       <workItem from="1764805612103" duration="14244000" />
-      <workItem from="1764972943142" duration="443000" />
+      <workItem from="1764972943142" duration="680000" />
     </task>
     <servers />
   </component>

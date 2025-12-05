@@ -5,11 +5,7 @@ import type { ReactNode } from 'react'
 
 export const dynamic = 'force-dynamic'
 
-export default async function RootLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -25,13 +21,7 @@ export default async function RootLayout({
                 </Link>
               </div>
               <div className="flex items-center space-x-4">
-                {session ? (
-                  <LogoutButton />
-                ) : (
-                  <Link href="/signin" className="text-gray-700 hover:text-gray-900">
-                    Sign in
-                  </Link>
-                )}
+                {session ? <LogoutButton /> : <Link href="/signin" className="text-gray-700 hover:text-gray-900">Sign in</Link>}
               </div>
             </div>
           </div>

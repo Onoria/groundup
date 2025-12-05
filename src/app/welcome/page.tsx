@@ -8,9 +8,7 @@ export default async function WelcomePage() {
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
-  if (session) {
-    redirect('/dashboard')
-  }
+  if (session) redirect('/dashboard')
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
