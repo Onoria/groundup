@@ -19,8 +19,8 @@ export default function Login() {
           theme="dark"
           providers={[]}
           view="sign_in"
-          redirectTo="/onboarding/role"
-          showLinks={false}   // ← This forces redirect after login
+          redirectTo="/onboarding/role/selection"   // ← THIS IS THE ONLY CHANGE
+          showLinks={false}
         />
       </div>
     </div>
