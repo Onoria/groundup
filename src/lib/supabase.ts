@@ -1,3 +1,4 @@
+// src/lib/supabase.ts
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 
 export const createClient = () =>
