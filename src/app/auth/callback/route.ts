@@ -14,5 +14,6 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(new URL('/welcome', origin))
+  // Always go to welcome — this is the "close tab" page
+  return NextResponse.redirect(`${origin}/welcome`)
 }
