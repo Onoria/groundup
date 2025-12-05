@@ -19,7 +19,7 @@ export default function Login() {
           theme="dark"
           providers={[]}
           view="sign_in"
-          redirectTo="/onboarding/role/selection"   // ← THIS IS THE ONLY CHANGE
+          redirectTo="/onboarding/role"   // ← CORRECT PATH
           showLinks={false}
         />
       </div>
