@@ -12,11 +12,10 @@ export default function Signup() {
   const router = useRouter()
   const [emailSent, setEmailSent] = useState(false)
 
-  // Detect when magic link has been requested (Supabase fires this event)
+  // Only listen for actual sign-in
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORDLESS_LINK_SENT') setEmailSent(true)
-      if (event === 'SIGNED_IN') router.replace('/onboarding/role')
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) router.replace('/onboarding/role')
     })
     return () => listener.subscription.unsubscribe()
   }, [router, supabase])
@@ -34,7 +33,7 @@ export default function Signup() {
           </div>
         ) : (
           <div className="bg-zinc-900/50 backdrop-blur rounded-2xl p-8 border border-zinc-800">
-            {/* Hidden Auth UI — does all the real work */}
+            {/* Hidden Auth UI — does the real magic-link request */}
             <div className="opacity-0 h-0 overflow-hidden">
               <Auth
                 supabaseClient={supabase}
@@ -47,14 +46,19 @@ export default function Signup() {
               />
             </div>
 
-            {/* Beautiful custom form */}
+            {/* Custom beautiful form */}
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value
-                if (email) {
-                  // Trigger hidden Auth form
-                  ;(document.querySelector('input[type="email"]') as HTMLInputElement)?.form?.requestSubmit()
+                const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim()
+                if (!email) return
+
+                // Trigger the hidden Auth form → sends magic link + instantly flips UI
+                const hiddenEmailInput = document.querySelector('input[type="email"]') as HTMLInputElement
+                if (hiddenEmailInput) {
+                  hiddenEmailInput.value = email
+                  hiddenEmailInput.form?.requestSubmit()
+                  setEmailSent(true) // Immediately show spinner
                 }
               }}
               className="space-y-6"
