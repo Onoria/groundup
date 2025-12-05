@@ -11,10 +11,18 @@ export default function Signup() {
   const router = useRouter()
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // Initial session check — fixes immediate redirect after link click
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        // Force full page reload to clear any cached state
-        window.location.href = '/onboarding/role'
+        router.replace('/onboarding/role')
+        router.refresh() // Force re-render to update layout/logout
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.replace('/onboarding/role')
+        router.refresh() // Force re-render to update layout/logout
       }
     })
 
@@ -31,11 +39,9 @@ export default function Signup() {
           <Auth
             supabaseClient={supabase}
             view="magic_link"
-            onlyThirdPartyProviders={false}
-            showLinks={false}
-            providers={[]}
             redirectTo={`${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`}
-            magicLink={true}
+            showLinks={true}
+            providers={[]}
             theme="dark"
             appearance={{
               theme: ThemeSupa,
@@ -50,6 +56,9 @@ export default function Signup() {
             }}
           />
         </div>
+        <p className="text-center text-zinc-500 mt-8 text-sm">
+          By continuing you agree to our Terms and Privacy Policy
+        </p>
       </div>
     </div>
   )

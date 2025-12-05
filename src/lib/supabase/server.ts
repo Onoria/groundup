@@ -8,22 +8,19 @@ export const createServerSupabaseClient = () =>
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        async get(name: string) {
-          const cookieStore = await cookies()
-          return cookieStore.get(name)?.value
+        get(name: string) {
+          return cookies().get(name)?.value
         },
-        async set(name: string, value: string, options: any) {
-          const cookieStore = await cookies()
+        set(name: string, value: string, options: any) {
           try {
-            cookieStore.set(name, value, options)
+            cookies().set(name, value, options)
           } catch {
             // Ignored in server components
           }
         },
-        async remove(name: string, options: any) {
-          const cookieStore = await cookies()
+        remove(name: string, options: any) {
           try {
-            cookieStore.delete(name)
+            cookies().delete(name)
           } catch {
             // Ignored in server components
           }

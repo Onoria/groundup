@@ -14,6 +14,9 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // Always go to welcome — this is the "close tab" page
-  return NextResponse.redirect(`${origin}/welcome`)
+  // Force no-cache to ensure session is read on next page
+  const response = NextResponse.redirect(`${origin}/welcome`)
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+
+  return response
 }
