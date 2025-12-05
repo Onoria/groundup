@@ -1,4 +1,4 @@
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth, currentUser, redirect } from '@clerk/nextjs/server'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 
@@ -7,7 +7,7 @@ export default async function Dashboard() {
   const user = await currentUser()
 
   if (!userId) {
-    return <RedirectToSignIn />
+    return redirect("/sign-in")
   }
 
   return (
