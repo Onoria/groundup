@@ -29,7 +29,11 @@ export default function RootLayout({
                 <div className="space-x-4">
                   <SignedOut>
                     <SignInButton mode="modal" />
-                    <SignUpButton mode="modal" />
+                    <SignUpButton mode="modal">
+                      <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm h-10 px-4 cursor-pointer">
+                        Sign Up
+                      </button>
+                    </SignUpButton>
                   </SignedOut>
                   <SignedIn>
                     <UserButton />
