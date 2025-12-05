@@ -8,10 +8,11 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
 
+  const supabase = createServerSupabaseClient()
+
   if (code) {
-    const supabase = createServerSupabaseClient()
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(`${origin}/welcome`)
+  return NextResponse.redirect(new URL('/welcome', origin))
 }
