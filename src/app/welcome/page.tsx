@@ -1,33 +1,38 @@
-// src/app/welcome/page.tsx
-import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Welcome() {
-  const supabase = await createServerSupabaseClient()
+export default async function WelcomePage() {
+  const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) {
-    redirect('/signup')
+  if (session) {
+    redirect('/dashboard')
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-black flex items-center justify-center p-8">
-      <div className="text-center max-w-md">
-        <h1 className="text-6xl font-black text-emerald-400 mb-8">Welcome to GroundUp</h1>
-        <p className="text-xl text-zinc-300 mb-12">You're logged in and ready to raid.</p>
-        <Link
-          href="/onboarding/role"
-          className="inline-block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 px-10 rounded-xl text-lg transition"
-        >
-          Continue to Role Selection →
-        </Link>
-        <p className="text-sm text-zinc-500 mt-4">
-          Your original tab is already logged in.<br />
-          <strong>You can close this window now.</strong>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8">
+        <h1 className="text-4xl font-bold text-center">Welcome to GroundUp</h1>
+        <p className="text-center text-gray-600">
+          The Dungeon Finder for startup co-founders
         </p>
+        <div className="space-y-4">
+          <Link
+            href="/signin"
+            className="block w-full text-center py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="block w-full text-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Create account
+          </Link>
+        </div>
       </div>
     </div>
   )

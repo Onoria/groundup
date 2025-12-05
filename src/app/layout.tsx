@@ -1,9 +1,6 @@
-// src/app/layout.tsx
-import './globals.css'
-
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import LogoutButton from '@/components/LogoutButton'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
 import type { ReactNode } from 'react'
 
 export const dynamic = 'force-dynamic'
@@ -13,32 +10,33 @@ export default async function RootLayout({
 }: {
   children: ReactNode
 }) {
-  const supabase = await createServerSupabaseClient()
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const supabase = createClient()
+  const { data: { session } = await supabase.auth.getSession()
 
   return (
     <html lang="en">
-      <body className="h-full bg-black text-white">
-        <div className="min-h-screen flex flex-col">
-          <header className="border-b border-zinc-800">
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <Link
-                href="/"
-                className="text-4xl font-black text-emerald-400 hover:text-emerald-300 transition"
-              >
-                GroundUp
-              </Link>
-
-              {session && <LogoutButton />}
+      <body className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <Link href="/" className="text-xl font-bold text-gray-900">
+                  GroundUp
+                </Link>
+              </div>
+              <div className="flex items-center space-x-4">
+                {session?.session ? (
+                  <LogoutButton />
+                ) : (
+                  <Link href="/signin" className="text-gray-700 hover:text-gray-900">
+                    Sign in
+                  </Link>
+                )}
+              </div>
             </div>
-          </header>
-
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
+          </div>
+        </nav>
+        <main>{children}</main>
       </body>
     </html>
   )
