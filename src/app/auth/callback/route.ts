@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
 
   if (code) {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()  // Await the Promise here
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,11 +19,11 @@ export async function GET(request: Request) {
           get(name: string) {
             return cookieStore.get(name)?.value
           },
-          set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options })
+          set(name: string, value: string, options?: any) {
+            cookieStore.set(name, value, options)
           },
-          remove(name: string, options: any) {
-            cookieStore.delete({ name, ...options })
+          remove(name: string, options?: any) {
+            cookieStore.delete(name)
           },
         },
       }
