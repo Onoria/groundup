@@ -1,9 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export const createClient = () => {
-  // Next.js 16 makes cookies() async — we must await it
-  const cookieStore = cookies()
+export const createClient = async () => {
+  const cookieStore = await cookies()   // ← this is now required in Next.js 16
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +16,7 @@ export const createClient = () => {
           try {
             cookieStore.set({ name, value, ...options })
           } catch {
-            // ignore — expected in some contexts
+            // ignore — expected in middleware / some server contexts
           }
         },
         remove(name: string, options: any) {
