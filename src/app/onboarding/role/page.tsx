@@ -1,26 +1,34 @@
-import Link from 'next/link'
+'use client'
 
-export default function Home() {
+import { ChevronRight } from 'lucide-react'
+
+const roles = [
+  { id: 'visionary_tech', name: 'Visionary / CEO', track: 'Tech Startup' },
+  { id: 'technical_lead', name: 'Technical Lead / CTO', track: 'Tech Startup' },
+  { id: 'growth_marketing', name: 'Growth & Marketing Lead', track: 'Tech Startup' },
+  { id: 'product_designer', name: 'Product Designer', track: 'Tech Startup' },
+  { id: 'ops_finance', name: 'Operations & Finance Lead', track: 'Tech Startup' },
+  { id: 'owner_operator', name: 'Owner-Operator / Visionary', track: 'Blue-Collar Empire' },
+  { id: 'master_tradesman', name: 'Master Tradesman', track: 'Blue-Collar Empire' },
+  { id: 'sales_closer', name: 'Sales & Business Development', track: 'Blue-Collar Empire' },
+  { id: 'ops_fleet', name: 'Operations & Fleet Manager', track: 'Blue-Collar Empire' },
+  { id: 'finance_admin', name: 'Finance & Administration', track: 'Blue-Collar Empire' },
+]
+
+export default function RoleSelection() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-white">
-      <div className="container mx-auto px-6 pt-24 pb-32 text-center">
-        <h1 className="text-6xl md:text-8xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-          GroundUp
-        </h1>
-        <p className="mt-8 text-xl md:text-3xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-          Prove your skills privately with zero-knowledge proofs.<br />
-          Form balanced founding teams for tech startups or blue-collar empires.<br />
-          Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
-        </p>
-        <div className="mt-16">
-          <Link
-            href="/onboarding/role"
-            className="bg-emerald-600 hover:bg-emerald-500 px-16 py-6 text-2xl rounded-xl font-bold transition shadow-2xl"
-          >
-            Start Matching – $49/mo
-          </Link>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-white p-8">
+      <div className="max-w-6xl mx-auto text-center">
+        <h1 className="text-5xl font-black mb-12">Choose Your Primary Role</h1>
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-8">
+          {roles.map(role => (
+            <div key={role.id} className="p-10 rounded-2xl border-4 border-slate-700 bg-slate-800/50 hover:border-slate-500 transition">
+              <h3 className="text-2xl font-bold mb-3">{role.name}</h3>
+              <p className="text-emerald-400 text-sm uppercase tracking-wider">{role.track}</p>
+            </div>
+          ))}
         </div>
       </div>
-    </main>
+    </div>
   )
 }
