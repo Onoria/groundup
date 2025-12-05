@@ -1,36 +1,19 @@
-import { createServerClient } from '@supabase/ssr'
+import { createMiddlewareClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: req.headers,
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: any) {
-          response.cookies.delete({ name, ...options })
-        },
-      },
-    }
-  )
+  const supabase = createMiddlewareClient({ req, res })
 
-  // Refresh session if expired – required for Server Components
   await supabase.auth.getSession()
 
-  return response
+  return res
 }
 
 export const config = {
