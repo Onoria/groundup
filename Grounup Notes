@@ -1,0 +1,17 @@
+Ground Up Kubuntu 2025
+
+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
+
+
+git remote remove origin
+git remote add origin https://Onoria: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@github.com/Onoria/groundup.git
+git push -u origin main
+
+Supabase
+Lare63Y41BewjeLt
+
+Vercel
+Supabase
+github
+
+https://www.groundup-app.com/
