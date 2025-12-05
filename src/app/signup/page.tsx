@@ -20,6 +20,7 @@ export default function Signup() {
           providers={[]}
           redirectTo="/onboarding/role"
           showLinks={false}
+          onlyThirdPartyProviders={false} // THIS LINE WAS HIDING SIGN UP — REMOVED
         />
       </div>
     </div>
