@@ -1,3 +1,4 @@
+// src/app/welcome/page.tsx
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -6,7 +7,9 @@ export default async function Welcome() {
   const supabase = createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
 
-  if (!session) redirect('/signup')
+  if (!session) {
+    redirect('/signup')
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-black flex items-center justify-center p-8">
