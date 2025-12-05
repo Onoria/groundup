@@ -5,20 +5,15 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export default async function Welcome() {
-  const cookieStore = await cookies()
-
+  const cookieStore = cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: any) => {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove: (name: string, options: any) => {
-          cookieStore.delete({ name, ...options })
-        },
+        set: (name: string, value: string, options: any) => cookieStore.set(name, value, options),
+        remove: (name: string) => cookieStore.delete(name),
       },
     }
   )
@@ -34,7 +29,7 @@ export default async function Welcome() {
       <div className="text-center max-w-md">
         <h1 className="text-6xl font-black text-emerald-400 mb-8">Welcome to GroundUp</h1>
         <p className="text-xl text-zinc-300 mb-12">
-          You're logged in and ready to build your founding team.
+          You're in. Your founding team awaits.
         </p>
         <div className="space-y-6">
           <Link
@@ -45,7 +40,7 @@ export default async function Welcome() {
           </Link>
           <p className="text-sm text-zinc-500">
             Your original tab is already logged in.<br />
-            <strong>You can safely close this window.</strong>
+            <strong>You can close this window now.</strong>
           </p>
         </div>
       </div>
