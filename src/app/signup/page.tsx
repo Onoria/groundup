@@ -20,6 +20,8 @@ export default function Signup() {
           providers={[]}
           redirectTo="/onboarding/role"
           showLinks={false}
+          // This line forces both tabs to show
+          onlyThirdPartyProviders={false}
         />
       </div>
     </div>
