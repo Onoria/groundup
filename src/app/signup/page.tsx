@@ -9,10 +9,10 @@ export default function Signup() {
   const router = useRouter()
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Force immediate redirect — no delay
         router.replace('/onboarding/role')
-        router.refresh()
       }
     })
 
@@ -21,9 +21,9 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center p-8">
-      <div className="max-w-md w-full text-center">
+      <div className="text-center">
         <h1 className="text-6xl font-black text-emerald-400 mb-8">GroundUp</h1>
-        <p className="text-2xl text-white mb-8">Creating your account...</p>
+        <p className="text-2xl text-white mb-8">Creating your account…</p>
         <div className="animate-spin w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto" />
       </div>
     </div>
