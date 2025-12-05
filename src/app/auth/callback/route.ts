@@ -2,22 +2,18 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
+  const url = new URL(request.url)
+  const code = url.searchParams.get('code')
 
   if (code) {
-    const supabase = await createServerSupabaseClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const supabase = createServerSupabaseClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+      console.error('Supabase auth error:', error)
+    }
   }
 
-  const response = NextResponse.redirect(`${origin}/welcome`)
-  response.headers.set(
-    'Cache-Control',
-    'no-store, no-cache, must-revalidate, proxy-revalidate',
-  )
-
-  return response
+  return NextResponse.redirect(`${url.origin}/welcome`)
 }

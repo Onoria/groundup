@@ -7,33 +7,20 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase'
 
-export default function Signup() {
+export default function SignupPage() {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
-    // Initial session check — handles returning users and the case where the
-    // magic link opens in a different tab but this tab has already picked up
-    // the session via cookies.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace('/onboarding/role')
-        router.refresh()
-      }
-    })
-
     const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        router.replace('/onboarding/role')
-        router.refresh()
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        router.replace('/welcome')
       }
     })
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [router, supabase])
 
   const redirectTo =
@@ -42,26 +29,17 @@ export default function Signup() {
       : `${window.location.origin}/auth/callback`
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">GroundUp</h1>
-        <p className="text-sm text-gray-500">
-          Form balanced founding teams for tech startups or blue-collar empires.
-        </p>
-      </header>
+    <div className="max-w-md mx-auto flex flex-col gap-6">
+      <h1 className="text-2xl font-semibold">Sign Up</h1>
 
       <Auth
         supabaseClient={supabase}
-        view="magic_link"
         appearance={{ theme: ThemeSupa }}
+        view="magic_link"
         showLinks={false}
         providers={[]}
         redirectTo={redirectTo}
       />
-
-      <p className="text-xs text-gray-500">
-        By continuing you agree to our Terms and Privacy Policy.
-      </p>
     </div>
   )
 }
