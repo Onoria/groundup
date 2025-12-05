@@ -1,4 +1,3 @@
-// lib/supabase/server.ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -15,14 +14,14 @@ export const createServerSupabaseClient = () =>
           try {
             cookies().set({ name, value, ...options })
           } catch {
-            // Ignored — set called from server component
+            // Ignored — server component
           }
         },
         remove(name: string, options: any) {
           try {
             cookies().delete({ name, ...options })
           } catch {
-            // Ignored — delete called from server component
+            // Ignored — server component
           }
         },
       },
