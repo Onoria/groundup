@@ -8,11 +8,16 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
 
-  const supabase = createServerSupabaseClient()
-
   if (code) {
+    const supabase = await createServerSupabaseClient()
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  return NextResponse.redirect(`${origin}/welcome`)
+  const response = NextResponse.redirect(`${origin}/welcome`)
+  response.headers.set(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate',
+  )
+
+  return response
 }
