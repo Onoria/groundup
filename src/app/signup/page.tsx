@@ -18,7 +18,7 @@ export default function Signup() {
           appearance={{ theme: ThemeSupa }}
           theme="dark"
           providers={[]}
-          redirectTo="/onboarding/role"   // ← CORRECT PATH
+          redirectTo="/onboarding/role"   // ← This sends them to the role grid after signup/login
           showLinks={false}
         />
       </div>
