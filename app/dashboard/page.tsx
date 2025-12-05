@@ -3,7 +3,7 @@ import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 
 export default async function Dashboard() {
-  const { userId } = auth()
+  const { userId } = await auth()
   const user = await currentUser()
 
   if (!userId) {
