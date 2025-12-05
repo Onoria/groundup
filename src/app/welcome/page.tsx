@@ -5,15 +5,30 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export default async function Welcome() {
-  const cookieStore = cookies()
+  const response = NextResponse.next({ request: { headers: new Headers() } })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: any) => cookieStore.set(name, value, options),
-        remove: (name: string) => cookieStore.delete(name),
+        getAll() {
+          return cookies().getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => cookies().set(name, value, options))
+          } catch {
+            // Ignore for server components
+          }
+        },
+        removeAll(cookiesToRemove) {
+          try {
+            cookiesToRemove.forEach(({ name, options }) => cookies().delete(name, options))
+          } catch {
+            // Ignore for server components
+          }
+        },
       },
     }
   )
@@ -29,7 +44,7 @@ export default async function Welcome() {
       <div className="text-center max-w-md">
         <h1 className="text-6xl font-black text-emerald-400 mb-8">Welcome to GroundUp</h1>
         <p className="text-xl text-zinc-300 mb-12">
-          You're in. Your founding team awaits.
+          You're logged in and ready to build your founding team.
         </p>
         <div className="space-y-6">
           <Link
@@ -40,7 +55,7 @@ export default async function Welcome() {
           </Link>
           <p className="text-sm text-zinc-500">
             Your original tab is already logged in.<br />
-            <strong>You can close this window now.</strong>
+            <strong>You can safely close this window.</strong>
           </p>
         </div>
       </div>
