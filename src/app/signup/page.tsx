@@ -8,20 +8,20 @@ export default function Signup() {
   const supabase = createClient()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center p-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-900">
       <div className="w-full max-w-md">
-        <h1 className="text-5xl font-black text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
-          GroundUp
-        </h1>
-        <Auth
-          supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
-          theme="dark"
-          providers={[]}
-          redirectTo="/onboarding/role"
-          showLinks={false}
-          onlyThirdPartyProviders={false} // THIS LINE WAS HIDING SIGN UP — REMOVED
-        />
+        <h1 className="mb-8 text-center text-4xl font-bold text-white">GroundUp</h1>
+        <div className="rounded-lg bg-gray-800 p-8 shadow-xl">
+          <Auth
+            supabaseClient={supabase}
+            view="magic_link"
+            appearance={{ theme: ThemeSupa }}
+            theme="dark"
+            showLinks={true}
+            providers={[]}
+            redirectTo="http://localhost:3000/onboarding/role"
+          />
+        </div>
       </div>
     </div>
   )
