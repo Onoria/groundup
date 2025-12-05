@@ -8,9 +8,7 @@ export default function Home() {
           GroundUp
         </h1>
         <p className="mt-8 text-xl md:text-3xl text-slate-300 max-w-4xl mx-auto leading-relaxed">
-          Prove your skills privately with zero-knowledge proofs.<br />
-          Form balanced founding teams for tech startups or blue-collar empires.<br />
-          Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
+          Form balanced founding teams for tech startups or blue-collar empires.
         </p>
         <div className="mt-16">
           <Link
