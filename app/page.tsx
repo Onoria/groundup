@@ -3,37 +3,21 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white">
-      <header className="px-8 py-8">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="w-32" />
-          <div className="text-center">
-            <h1 className="heading">GroundUp</h1>
-            <p className="text-cyan-300 text-xl mt-3 font-light">Prove skills. Form teams. Build empires.</p>
-          </div>
-          <div className="w-32 flex justify-end">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="text-gray-400 hover:text-cyan-300 transition font-medium">Sign in</button>
-              </SignInButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-24 py-12">
+      {/* Hero */}
+      <section className="text-center">
+        <h1 className="heading">GroundUp</h1>
+        <p className="mt-6 text-xl text-cyan-300 font-light">Prove skills. Form teams. Build empires.</p>
 
-      <main className="max-w-6xl mx-auto px-8 pt-16 text-center">
-        <p className="text-3xl text-cyan-200 font-light mb-6">
+        <p className="mt-12 text-3xl text-cyan-200 font-light">
           Prove your skills privately with zero-knowledge proofs.
         </p>
-        <p className="text-xl text-gray-400 mb-20 leading-relaxed max-w-4xl mx-auto">
+        <p className="mt-6 text-xl text-gray-400 max-w-4xl mx-auto leading-relaxed">
           Form balanced founding teams for tech startups or blue-collar empires.<br />
           Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
         </p>
 
-        <div className="flex justify-center gap-8 mb-24">
+        <div className="mt-12 flex flex-wrap justify-center gap-6">
           <SignedIn>
             <Link href="/match">
               <button className="btn">Join the Waitlist – $49/mo</button>
@@ -46,8 +30,11 @@ export default function HomePage() {
           </SignedOut>
           <button className="btn">See How It Works</button>
         </div>
+      </section>
 
-        <div className="max-w-md mx-auto mb-32 glass">
+      {/* Early Access Card */}
+      <section className="max-w-md mx-auto">
+        <div className="glass p-10 text-center">
           <h3 className="text-4xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
           <input
             type="email"
@@ -57,9 +44,11 @@ export default function HomePage() {
           <button className="w-full btn">Join Waitlist – First Month 50% Off</button>
           <p className="text-gray-500 text-sm mt-4">Limited spots. Matching starts January 2026.</p>
         </div>
+      </section>
 
+      {/* How It Works */}
+      <section className="text-center">
         <h2 className="text-5xl font-bold text-cyan-400 mb-16">How GroundUp Works</h2>
-
         <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
           {[
             { n: "1", title: "Verify Privately", desc: "Zero-knowledge proofs confirm skills without revealing details." },
@@ -73,7 +62,7 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </main>
+      </section>
     </div>
   )
 }
