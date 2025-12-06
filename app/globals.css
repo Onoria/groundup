@@ -46,3 +46,10 @@ body {
   line-height: 1.1;
   letter-spacing: -2px;
 }
+
+/* Keep these classes alive for Tailwind */
+@layer components {
+  .glass { @apply bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl; }
+  .btn { @apply bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold px-12 py-6 rounded-2xl text-xl shadow-2xl shadow-emerald-500/50 transition-all hover:scale-105; }
+  .heading { @apply text-7xl md:text-8xl font-black bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent; }
+}
