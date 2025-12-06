@@ -6,7 +6,7 @@ import { setQueued } from '@/lib/updateMetadata'
 import Link from 'next/link'
 
 export default function Match() {
-  const { user,|B isLoaded } = useUser()
+  const { user, isLoaded } = useUser()
   const [isQueued, setIsQueued] = useState(false)
 
   useEffect(() => {
