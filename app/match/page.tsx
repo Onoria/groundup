@@ -1,50 +1,69 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import { useState } from 'react'
+import { setQueued } from '@/lib/updateMetadata'
 
-import { useUser } from '@clerk/nextjs'
-import { useState, useEffect } from 'react'
-import { setQueued } from '../lib/updateMetadata'
-import Link from 'next/link'
-
-export default function Match() {
-  const { user, isLoaded } = useUser()
+export default function MatchPage() {
   const [isQueued, setIsQueued] = useState(false)
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user?.publicMetadata?.queued === true) setIsQueued(true)
-  }, [user])
+  const joinQueue = async () => {
+    setError(null)
+    setIsPending(true)
+    try {
+      await setQueued(true)
+      setIsQueued(true)
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong – please try again')
+    } finally {
+      setIsPending(false)
+    }
+  }
 
-  if (!isLoaded || !user) return <div className="flex min-h-screen items-center justify-center">Loading...</div>
-
-  const role = (user.publicMetadata as any)?.role || 'Hero'
+  const leaveQueue = async () => {
+    setError(null)
+    setIsPending(true)
+    try {
+      await setQueued(false)
+      setIsQueued(false)
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong – please try again')
+    } finally {
+      setIsPending(false)
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Dungeon Finder: {role} Queue</h1>
-        <p className="text-xl mb-6">Waiting for a balanced party. Monthly sub unlocks instant matches.</p>
+    <div className="max-w-2xl mx-auto pt-20">
+      <h1 className="text-4xl font-bold mb-8">Find Your Startup Team</h1>
 
-        {!isQueued ? (
-          <form action={async () => {
-            await setQueued(true)
-            setIsQueued(true)
-          }}>
-            <button type="submit" className="px-8 py-4 bg-green-600 text-white rounded-lg font-semibold">
-              Join Queue as {role}
-            </button>
-          </form>
-        ) : (
-          <p className="text-green-600 mb-8">You're in the queue! <Link href="/dashboard" className="underline">Back to dashboard</Link></p>
-        )}
-
-        <div className="mt-8 text-center">
-          <Link href="/subscribe" className="px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold">
-            Subscribe ($29/mo) for Unlimited Matches
-          </Link>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
         </div>
-      </div>
+      )}
+
+      {!isQueued ? (
+        <button
+          onClick={joinQueue}
+          disabled={isPending}
+          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-6 px-8 rounded text-2xl transition"
+        >
+          {isPending ? 'Joining Queue...' : 'Join the Queue'}
+        </button>
+      ) : (
+        <div className="text-center">
+          <p className="text-2xl mb-6">✅ You are in the queue!</p>
+          <button
+            onClick={leaveQueue}
+            disabled={isPending}
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded"
+          >
+            Leave Queue
+          </button>
+        </div>
+      )}
     </div>
   )
 }

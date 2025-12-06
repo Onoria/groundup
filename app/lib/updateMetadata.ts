@@ -7,15 +7,31 @@ export async function setQueued(queued: boolean) {
   const { userId } = await auth()
   if (!userId) throw new Error('Unauthorized')
 
-  // Await the client factory (Clerk v5.6+ requirement)
-  const client = await clerkClient()
-  // Type assertion for TS lag (runtime is fine)
-  const typedClient = client as typeof client & { users: { updateUserMetadata: (id: string, updates: { publicMetadata: any }) => Promise<any> } }
+  try {
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        queued,
+        queuedAt: queued ? Date.now() : null,
+      },
+    })
+  } catch (error) {
+    console.error('[setQueued] Failed to update metadata:', error)
+    throw new Error(
+      `Failed to ${queued ? 'join' : 'leave'} the queue. Please try again.`
+    )
+  }
+}
 
-  await typedClient.users.updateUserMetadata(userId, {
-    publicMetadata: {
-      queued,
-      queuedAt: queued ? Date.now() : null,
-    },
-  })
+export async function setRole(role: string) {
+  const { userId } = await auth()
+  if (!userId) throw new Error('Unauthorized')
+
+  try {
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: { role },
+    })
+  } catch (error) {
+    console.error('[setRole] Failed to update role:', error)
+    throw new Error('Failed to save role. Please try again.')
+  }
 }
