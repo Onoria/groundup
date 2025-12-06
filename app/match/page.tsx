@@ -20,7 +20,6 @@ export default function Match() {
 
   const joinQueue = async () => {
     if (!user) return
-    // @ts-expect-error Clerk v5+ publicMetadata types are broken — runtime works fine
     await user.update({
       publicMetadata: { ...(user.publicMetadata as any), queued: true, queuedAt: Date.now() }
     })
