@@ -6,10 +6,9 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
 ])
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    // @ts-expect-error Clerk v5+ TS types lag, but auth().protect() works at runtime
-    auth().protect()
+    await auth.protect()  // ← this is the correct way
   }
 })
 
