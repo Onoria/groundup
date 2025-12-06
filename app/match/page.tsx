@@ -1,10 +1,11 @@
 'use client'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { useUser } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
-import { setQueued } from '../lib/updateMetadata'
+import { setQueued } from '@/lib/updateMetadata'
 import Link from 'next/link'
 
 export default function Match() {
