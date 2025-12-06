@@ -6,12 +6,17 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
 ])
 
-export default clerkMiddleware((auth, req) => {
-  if (!isPublicRoute(req)) {
-    return auth.protect()
+export default clerkMiddleware(async (auth, req) => {
+  const { isAuthenticated, redirectToSignIn } = await auth()
+
+  if (!isAuthenticated && !isPublicRoute(req)) {
+    return redirectToSignIn()
   }
 })
 
 export const config = {
-  matcher: ['/((?!_next).*)'],
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
+  ],
 }
