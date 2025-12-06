@@ -62,12 +62,12 @@ export default function HomePage() {
 
         <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
           {[
-            { n: "1, title: "Verify Privately", desc: "Zero-knowledge proofs confirm skills without revealing details." },
-            { n:2, title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
-            { n:3, title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
+            { n: "1", title: "Verify Privately", desc: "Zero-knowledge proofs confirm skills without revealing details." },
+            { n: "2", title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
+            { n: "3", title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
           ].map((step) => (
             <div key={step.n} className="glass p-10 text-center">
-              <div className="text-7xl font-black text-cyan-400 mb-6">{step.n</div>
+              <div className="text-7xl font-black text-cyan-400 mb-6">{step.n}</div>
               <h4 className="text-2xl font-bold mb-4">{step.title}</h4>
               <p className="text-gray-400 leading-relaxed">{step.desc}</p>
             </div>
