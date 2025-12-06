@@ -4,23 +4,17 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-:root {
-  --background: 222 47% 11%;
-  --foreground: 0 0% 98%;
-  --accent: 182 100% 50%;
-}
-
 @layer components {
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+    @apply bg-white bg-opacity-5 backdrop-blur-xl border border-white border-opacity-10 rounded-2xl shadow-2xl;
   }
 
   .btn-green {
-    @apply bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold px-8 py-5 rounded-xl shadow-lg transform transition hover:scale-105;
+    @apply bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold px-8 py-5 rounded-xl shadow-lg transform transition hover:scale-105;
   }
 
   .btn-cyan {
-    @apply bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold px-8 py-5 rounded-xl shadow-lg transform transition hover:scale-105;
+    @apply bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold px-8 py-5 rounded-xl shadow-lg transform transition hover:scale-105;
   }
 
   .heading {

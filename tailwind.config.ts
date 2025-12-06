@@ -15,8 +15,21 @@ const config: Config = {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      backdropBlur: {
+        xs: '2px',
+      },
     },
   },
   plugins: [],
+  corePlugins: {
+    preflight: true,
+  },
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
+  // ← THIS LINE FIXES bg-white/5, border-white/10, etc.
+  experimental: {
+    optimizeUniversalDefaults: true,
+  },
 }
 export default config
