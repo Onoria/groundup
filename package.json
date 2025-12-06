@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.0",
+    "geist": "^1.5.1",
     "lucide-react": "^0.455.0",
     "next": "latest",
     "react": "latest",
