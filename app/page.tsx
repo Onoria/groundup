@@ -5,12 +5,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0f1c] via-[#111827] to-[#1e293b] text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/10 via-transparent to-emerald-900/10" />
-      <div className="absolute top-20 left-20 w-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+      <div className="absolute top-20 left-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-20 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
 
       <header className="relative z-10 px-8 py-8">
         <div className="max-w-7xl mx-auto flex items-center">
-          <div className="w-48" /> {/* left spacer */}
+          <div className="w-48" />
           <div className="flex-1 text-center">
             <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
               GroundUp
@@ -59,8 +59,8 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Early Access card — now same width as the 3-step cards */}
-        <div className="max-w-2xl mx-auto mb-32">
+        {/* Smaller Early Access card — matches the 3-step cards */}
+        <div className="max-w-xl mx-auto mb-32">
           <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
             <h3 className="text-4xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
             <input
