@@ -11,7 +11,7 @@ export default function HomePage() {
 
       <header className="relative z-10 px-8 py-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="w-32 md:w-64" /> {/* Spacer to push auth to right */}
+          <div className="w-32 md:w-64" />
           <div className="text-center">
             <h1 className="text-7xl md:text-8xl font-black bg-gradient-to-r from-cyan-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
               GroundUp
@@ -60,19 +60,19 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Early Access Card - Made smaller per markup */}
-        <div className="max-w-md mx-auto mb-32"> {/* Reduced from max-w-lg */}
-          <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl"> {/* Reduced from p-10 */}
-            <h3 className="text-4xl font-bold text-cyan-400 mb-4">Get Early Access</h3> {/* Reduced from mb-8 */}
+        {/* Smaller Early Access Card */}
+        <div className="max-w-md mx-auto mb-32">
+          <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+            <h3 className="text-4xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
             <input
               type="email"
               placeholder="your@email.com"
-              className="w-full px-6 py-5 bg-white/10 border border-white/30 rounded-2xl text-white placeholder-gray-500 mb-4 focus:outline-none focus:ring-4 focus:ring-cyan-400/50" {/* Reduced from mb-6 */}
+              className="w-full px-6 py-5 bg-white/10 border border-white/30 rounded-2xl text-white placeholder-gray-500 mb-4 focus:outline-none focus:ring-4 focus:ring-cyan-400/50"
             />
             <button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-5 rounded-2xl text-xl shadow-2xl shadow-emerald-500/50 transition-all hover:scale-105">
               Join Waitlist – First Month 50% Off
             </button>
-            <p className="text-gray-500 text-sm mt-4">Limited spots. Matching starts January 2026.</p> {/* Reduced from mt-6 */}
+            <p className="text-gray-500 text-sm mt-4">Limited spots. Matching starts January 2026.</p>
           </div>
         </div>
 
