@@ -30,6 +30,7 @@ export default function Onboard() {
   const onSubmit = async (data: FormData) => {
     if (user) {
       try {
+        // @ts-expect-error Clerk v5+ TS types lag for publicMetadata, but it works at runtime
         await user.update({
           publicMetadata: { ...user.publicMetadata, ...data }
         })
