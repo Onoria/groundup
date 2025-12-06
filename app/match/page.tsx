@@ -11,7 +11,7 @@ export default function Match() {
 
   useEffect(() => {
     if (user?.publicMetadata?.role) {
-      setIsQueued(!!(user.publicMetadata as any).queued)
+      setIsQueued(!!(user.publicMetadata as any)?.queued)
       setQueue(['Founder (NY, Senior, Fintech)', 'Developer (TX, Junior, SaaS)'])
     }
   }, [user])
@@ -20,8 +20,9 @@ export default function Match() {
 
   const joinQueue = async () => {
     if (!user) return
-    // @ts-expect-error Clerk v5+ metadata types are incomplete (runtime works fine)
-    await user.update({ publicMetadata: { ...(user.publicMetadata as any), queued: true, queuedAt: Date.now() } })
+    // @ts-expect-error Clerk metadata types are incomplete
+    await user.update({
+      publicMetadata: { ...(user.publicMetadata as any), queued: true, queuedAt: Date.now() }
     })
     setIsQueued(true)
   }
