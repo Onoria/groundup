@@ -3,8 +3,10 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white">
-      <header className="border-b border-white/10 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      
+      <header className="relative z-10 border-b border-white/10 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
           <h1 className="heading">GroundUp</h1>
           <div className="flex items-center gap-8">
@@ -20,7 +22,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 pt-24 text-center">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-24 text-center">
         <p className="text-3xl text-gray-300 mb-6 font-light">
           Prove your skills privately with zero-knowledge proofs.
         </p>
@@ -43,7 +45,8 @@ export default function HomePage() {
           <button className="btn-cyan">See How It Works</button>
         </div>
 
-        <div className="glass max-w-md mx-auto p-10 mb-20">
+        {/* Glass cards with inline styles */}
+        <div className="max-w-md mx-auto p-10 mb-20" style={{background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px'}}>
           <h3 className="text-3xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
           <input
             type="email"
@@ -60,7 +63,7 @@ export default function HomePage() {
             { n: "2", title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
             { n: "3", title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
           ].map(s => (
-            <div key={s.n} className="glass p-10 text-center">
+            <div key={s.n} className="p-10 text-center" style={{background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px'}}>
               <div className="text-6xl font-bold text-cyan-400 mb-4">{s.n}</div>
               <h4 className="text-2xl font-semibold mb-4">{s.title}</h4>
               <p className="text-gray-400">{s.desc}</p>
