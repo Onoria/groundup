@@ -3,16 +3,14 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950" />
-      
-      <header className="relative z-10 border-b border-white/10 backdrop-blur-md">
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+      <header style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}>
         <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
           <h1 className="heading">GroundUp</h1>
           <div className="flex items-center gap-8">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="text-gray-300 hover:text-white font-medium transition">Sign in</button>
+                <button style={{ color: '#94a3b8' }} className="hover:text-white transition">Sign in</button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
@@ -22,50 +20,54 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-32 text-center">
-        <p className="text-3xl text-gray-300 mb-6 font-light">
+      <main className="max-w-6xl mx-auto px-6 pt-32 text-center">
+        <p style={{ fontSize: '1.875rem', color: '#cbd5e1', marginBottom: '1.5rem' }}>
           Prove your skills privately with zero-knowledge proofs.
         </p>
-        <p className="text-2xl text-gray-400 mb-16 max-w-4xl mx-auto">
+        <p style={{ fontSize: '1.5rem', color: '#94a3b8', marginBottom: '4rem', maxWidth: '64rem' }} className="mx-auto">
           Form balanced founding teams for tech startups or blue-collar empires.<br />
           Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center mb-20">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', marginBottom: '5rem' }} className="sm:flex-row justify-center">
           <SignedIn>
             <Link href="/match">
-              <button className="btn-green">Join the Waitlist – $49/mo</button>
+              <button className="btn">Join the Waitlist – $49/mo</button>
             </Link>
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn-green">Get Early Access</button>
+              <button className="btn">Get Early Access</button>
             </SignInButton>
           </SignedOut>
-          <button className="btn-green opacity-80">See How It Works</button>
+          <button className="btn" style={{ opacity: 0.8 }}>See How It Works</button>
         </div>
 
-        <div className="glass max-w-md mx-auto p-10 mb-20">
-          <h3 className="text-3xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
+        <div className="glass max-w-lg mx-auto mb-20">
+          <h3 style={{ fontSize: '2rem', fontWeight: '700', color: '#67e8f9', marginBottom: '1.5rem' }}>
+            Get Early Access
+          </h3>
           <input
             type="email"
             placeholder="your@email.com"
-            className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 mb-4"
+            style={{ width: '100%', padding: '1rem 1.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', color: 'white', marginBottom: '1rem' }}
           />
-          <button className="w-full btn-green">Join Waitlist – First Month 50% Off</button>
-          <p className="text-sm text-gray-500 mt-4">Limited spots. Matching starts January 2026.</p>
+          <button className="btn" style={{ width: '100%' }}>Join Waitlist – First Month 50% Off</button>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem' }}>
+            Limited spots. Matching starts January 2026.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-10">
+        <div style={{ display: 'grid', gap: '2.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
           {[
             { n: "1", title: "Verify Privately", desc: "Zero-knowledge proofs confirm skills without revealing details." },
             { n: "2", title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
             { n: "3", title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
           ].map(s => (
-            <div key={s.n} className="glass p-10 text-center">
-              <div className="text-6xl font-bold text-cyan-400 mb-4">{s.n}</div>
-              <h4 className="text-2xl font-semibold mb-4">{s.title}</h4>
-              <p className="text-gray-400">{s.desc}</p>
+            <div key={s.n} className="glass text-center">
+              <div style={{ fontSize: '4rem', fontWeight: 'bold', color: '#67e8f9', marginBottom: '1rem' }}>{s.n}</div>
+              <h4 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '1rem' }}>{s.title}</h4>
+              <p style={{ color: '#94a3b8' }}>{s.desc}</p>
             </div>
           ))}
         </div>
