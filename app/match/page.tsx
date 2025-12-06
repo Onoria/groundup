@@ -1,9 +1,9 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
-import { useState, useEffect } from 'react'
-import { updateQueueStatus } from '@/lib/updateMetadata'
-import Link from 'next/link'
+import { useUser } from "@/src/lib/updateMetadata"
+import { useState, useEffect } from "@/src/lib/updateMetadata"
+import { updateQueueStatus } from "@/src/lib/updateMetadata"
+import Link from "@/src/lib/updateMetadata"
 
 export default function Match() {
   const { user, isLoaded } = useUser()
