@@ -5,20 +5,29 @@ import { clerkClient } from '@clerk/nextjs/server'
 
 export async function setQueued(queued: boolean) {
   const { userId } = await auth()
-  if (!userId) throw new Error('Unauthorized')
+  
+  if (!userId) {
+    console.error('[setQueued] No userId – unauthorized')
+    throw new Error('You must be signed in')
+  }
 
   try {
-    const client = await clerkClient()  // ← this is the only change needed for v5
+    // v5: clerkClient is async → must await
+    const client = await clerkClient()
+    
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
         queued,
         queuedAt: queued ? Date.now() : null,
       },
     })
-  } catch (error) {
-    console.error('[setQueued] Failed to update metadata:', error)
-    throw new Error(
-      `Failed to ${queued ? 'join' : 'leave'} the queue. Please try again.`
-    )
+
+    console.log(`[setQueued] Success – user ${userId} queued = ${queued}`)
+  } catch (error: any) {
+    // This will show up in Vercel logs
+    console.error('[setQueued] Failed:', error.message || error)
+    
+    // Show user-friendly message instead of 500
+    throw new Error('Failed to join queue – please try again')
   }
 }
