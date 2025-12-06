@@ -21,17 +21,3 @@ export async function setQueued(queued: boolean) {
     )
   }
 }
-
-export async function setRole(role: string) {
-  const { userId } = await auth()
-  if (!userId) throw new Error('Unauthorized')
-
-  try {
-    await clerkClient.users.updateUserMetadata(userId, {
-      publicMetadata: { role },
-    })
-  } catch (error) {
-    console.error('[setRole] Failed to update role:', error)
-    throw new Error('Failed to save role. Please try again.')
-  }
-}
