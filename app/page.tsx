@@ -3,19 +3,16 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white relative overflow-hidden">
-      {/* Subtle background pattern (no overlay breakage) */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{backgroundImage: 'radial-gradient(circle at 25% 25%, #3b82f6 0%, transparent 50%), radial-gradient(circle at 75% 75%, #10b981 0%, transparent 50%)'}} />
-      </div>
-
-      <header className="relative z-10 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-cyan-400">GroundUp</h1>
-          <div className="flex items-center gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      
+      <header className="relative z-10 border-b border-white/10 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+          <h1 className="heading-cyan">GroundUp</h1>
+          <div className="flex items-center gap-8">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="text-gray-300 hover:text-white transition text-sm font-medium">Sign in</button>
+                <button className="text-gray-300 hover:text-white transition font-medium">Sign in</button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
@@ -25,71 +22,52 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="relative z-10 max-w-6xl mx-auto pt-32 px-6">
-        <div className="text-center mb-16">
-          <h2 className="heading-1">
-            Prove your skills privately with zero-knowledge proofs.
-          </h2>
-          <p className="text-muted max-w-3xl mx-auto mb-12">
-            Form balanced founding teams for tech startups or blue-collar empires. 
-            Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
-          </p>
-        </div>
+      <main className="relative z-10 max-w-5xl mx-auto pt-24 px-6 text-center">
+        <h2 className="text-5xl md:text-6xl font-light text-gray-300 mb-6">
+          Prove your skills privately with zero-knowledge proofs.
+        </h2>
+        <p className="text-2xl text-gray-400 mb-12 max-w-4xl mx-auto leading-relaxed">
+          Form balanced founding teams for tech startups or blue-collar empires.<br />
+          Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
+        </p>
 
-        <div className="flex flex-col md:flex-row gap-8 justify-center mb-20">
+        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-20">
           <SignedIn>
             <Link href="/match">
-              <button className="btn-secondary">Join the Waitlist – $49/mo</button>
+              <button className="btn-success text-xl px-12">Join the Waitlist – $49/mo</button>
             </Link>
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn-primary">Get Started</button>
+              <button className="btn-primary text-xl px-12">Get Early Access</button>
             </SignInButton>
           </SignedOut>
-          <Link href="/how-it-works">
-            <button className="btn-primary text-sm px-6 py-3">See How It Works</button>
-          </Link>
+          <button className="btn-primary opacity-80 hover:opacity-100 text-lg px-10">See How It Works</button>
         </div>
 
-        {/* Early access card with glassmorphism */}
-        <div className="glass-card max-w-md mx-auto mb-20 p-6 text-center">
-          <h3 className="heading-2">Get Early Access</h3>
-          <form className="space-y-4">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
-            />
-            <button type="submit" className="btn-secondary w-full">
-              Join Waitlist – First Month 50% Off
-            </button>
-          </form>
-          <p className="text-xs text-gray-500 mt-4">
-            Limited spots. Matching starts January 2026.
-          </p>
+        <div className="glass max-w-lg mx-auto p-8 mb-20">
+          <h3 className="text-3xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
+          <input
+            type="email"
+            placeholder="your@email.com"
+            className="w-full px-6 py-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-500 mb-4"
+          />
+          <button className="w-full btn-success">Join Waitlist – First Month 50% Off</button>
+          <p className="text-sm text-gray-500 mt-4">Limited spots. Matching starts January 2026.</p>
         </div>
 
-        {/* How it works section with glass cards */}
-        <div className="text-center">
-          <h3 className="heading-2 mb-12">How GroundUp Works</h3>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="glass-card p-6">
-              <div className="text-4xl font-bold text-cyan-400 mb-4">1</div>
-              <h4 className="text-xl font-semibold mb-2">Verify Privately</h4>
-              <p className="text-muted">Zero-knowledge proofs confirm skills without revealing details.</p>
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {[
+            { num: "1", title: "Verify Privately", desc: "Zero-knowledge proofs confirm skills without revealing details." },
+            { num: "2", title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
+            { num: "3", title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
+          ].map((step) => (
+            <div key={step.num} className="glass p-8 text-center">
+              <div className="text-6xl font-bold text-cyan-400 mb-4">{step.num}</div>
+              <h4 className="text-2xl font-semibold mb-3">{step.title}</h4>
+              <p className="text-gray-400">{step.desc}</p>
             </div>
-            <div className="glass-card p-6">
-              <div className="text-4xl font-bold text-cyan-400 mb-4">2</div>
-              <h4 className="text-xl font-semibold mb-2">Match & 21-Day Chemistry</h4>
-              <p className="text-muted">AI forms balanced teams; trial period ensures fit.</p>
-            </div>
-            <div className="glass-card p-6">
-              <div className="text-4xl font-bold text-cyan-400 mb-4">3</div>
-              <h4 className="text-xl font-semibold mb-2">Incorporate & Execute</h4>
-              <p className="text-muted">Legal templates + progress tracking for your state/industry.</p>
-            </div>
-          </div>
+          ))}
         </div>
       </main>
     </div>

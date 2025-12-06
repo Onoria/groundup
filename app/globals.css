@@ -2,65 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --background: 0 0% 4%; /* Dark navy */
-  --foreground: 0 0% 98%; /* Near-white text */
-  --accent: 189 99% 57%; /* Cyan/teal for buttons/headings */
-  --accent-fg: 0 0% 98%; /* White on accents */
-  --destructive: 0 84% 60%; /* Red for errors */
-  --glass-bg: 0 0% 100% / 0.05; /* Glassmorphism overlay */
-  --glass-border: 0 0% 100% / 0.1;
+  --background: 222.2 84% 4.9%;
+  --foreground: 0 0% 98%;
+  --accent: 189 100% 50%;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
-  html, body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: hsl(var(--background));
-    color: hsl(var(--foreground));
-    scroll-behavior: smooth;
-  }
-
   * {
-    box-sizing: border-box;
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 @layer components {
-  .glass-card {
-    background: hsl(var(--glass-bg));
+  .glass {
+    background: var(--glass);
     backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--glass-border));
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
     border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg;
+    @apply bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105;
   }
 
-  .btn-secondary {
-    @apply bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg;
+  .btn-success {
+    @apply bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105;
   }
 
-  .heading-1 {
-    @apply text-6xl md:text-7xl font-light tracking-tight text-cyan-400 mb-8 leading-tight;
-  }
-
-  .heading-2 {
-    @apply text-3xl font-semibold text-white mb-4;
-  }
-
-  .text-muted {
-    @apply text-gray-400 text-lg leading-relaxed;
-  }
-}
-
-@layer utilities {
-  .glass-overlay {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .heading-cyan {
+    @apply text-7xl font-extralight tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400;
   }
 }
