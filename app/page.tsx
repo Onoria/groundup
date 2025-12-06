@@ -3,16 +3,16 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+    <div className="min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950" />
       
-      <header className="relative z-10 border-b border-white/10 backdrop-blur-sm">
+      <header className="relative z-10 border-b border-white/10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
           <h1 className="heading">GroundUp</h1>
           <div className="flex items-center gap-8">
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="text-gray-300 hover:text-white font-medium">Sign in</button>
+                <button className="text-gray-300 hover:text-white font-medium transition">Sign in</button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
@@ -22,11 +22,11 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-24 text-center">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-32 text-center">
         <p className="text-3xl text-gray-300 mb-6 font-light">
           Prove your skills privately with zero-knowledge proofs.
         </p>
-        <p className="text-2xl text-gray-400 mb-16 leading-relaxed max-w-4xl mx-auto">
+        <p className="text-2xl text-gray-400 mb-16 max-w-4xl mx-auto">
           Form balanced founding teams for tech startups or blue-collar empires.<br />
           Incorporate in week one. Hire verified American labor. Build real companies from the ground up.
         </p>
@@ -34,19 +34,18 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-6 justify-center mb-20">
           <SignedIn>
             <Link href="/match">
-              <button className="btn-green text-xl">Join the Waitlist – $49/mo</button>
+              <button className="btn-green">Join the Waitlist – $49/mo</button>
             </Link>
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn-green text-xl">Get Early Access</button>
+              <button className="btn-green">Get Early Access</button>
             </SignInButton>
           </SignedOut>
-          <button className="btn-cyan">See How It Works</button>
+          <button className="btn-green opacity-80">See How It Works</button>
         </div>
 
-        {/* Glass cards with inline styles */}
-        <div className="max-w-md mx-auto p-10 mb-20" style={{background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px'}}>
+        <div className="glass max-w-md mx-auto p-10 mb-20">
           <h3 className="text-3xl font-bold text-cyan-400 mb-6">Get Early Access</h3>
           <input
             type="email"
@@ -63,7 +62,7 @@ export default function HomePage() {
             { n: "2", title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
             { n: "3", title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
           ].map(s => (
-            <div key={s.n} className="p-10 text-center" style={{background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px'}}>
+            <div key={s.n} className="glass p-10 text-center">
               <div className="text-6xl font-bold text-cyan-400 mb-4">{s.n}</div>
               <h4 className="text-2xl font-semibold mb-4">{s.title}</h4>
               <p className="text-gray-400">{s.desc}</p>
