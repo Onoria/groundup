@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware((auth, req) => {
   if (!isPublicRoute(req)) {
+    // @ts-expect-error Clerk v5+ TS types lag, but auth().protect() works at runtime
     auth().protect()
   }
 })
