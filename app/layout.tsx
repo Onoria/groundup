@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
-import { ClerkProvider } from '@clerk/nextjs'
-import { GeistSans } from 'geist/font/sans'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import { ClerkProvider } from '@clerk/nextjs'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'GroundUp',
-  description: 'The Dungeon Finder for startup teams',
+  description: 'Form balanced founding teams for tech startups or blue-collar empires.',
 }
-
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 export default function RootLayout({
   children,
@@ -19,7 +18,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={GeistSans.className}>{children}</body>
+        <body className={inter.className}>{children}</body>
       </html>
     </ClerkProvider>
   )

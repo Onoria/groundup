@@ -24,21 +24,21 @@ export default function MatchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
       <header className="border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
-          <Link href="/" className="text-xl font-semibold">GroundUp</Link>
+          <Link href="/" className="text-xl font-bold text-cyan-400">GroundUp</Link>
           <UserButton afterSignOutUrl="/" />
         </div>
       </header>
 
       <main className="max-w-2xl mx-auto pt-32 px-6 text-center">
-        <h1 className="text-5xl font-light tracking-tight mb-12">
+        <h1 className="text-5xl font-light tracking-tight text-cyan-400 mb-12">
           Ready to meet your co-founders?
         </h1>
 
         {error && (
-          <div className="mb-10 bg-red-900/20 border border-red-800 text-red-400 px-8 py-5 rounded-2xl">
+          <div className="mb-10 glass-card bg-red-900/20 border-red-800 text-red-400 px-8 py-5">
             {error}
           </div>
         )}
@@ -47,14 +47,14 @@ export default function MatchPage() {
           <button
             onClick={joinPool}
             disabled={isPending}
-            className="bg-white hover:bg-gray-100 disabled:opacity-50 text-black font-medium text-xl px-16 py-6 rounded-2xl transition transform hover:scale-105"
+            className="btn-primary disabled:opacity-50 text-xl px-16 py-6"
           >
             {isPending ? 'Joining...' : 'Join Matching Pool'}
           </button>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-8 glass-card p-8">
             <div className="text-3xl text-gray-300">
-              You’re in the matching pool
+              You're in the matching pool
             </div>
             <button
               onClick={leavePool}
