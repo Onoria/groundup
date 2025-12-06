@@ -45,3 +45,4 @@ export default function Match() {
     </div>
   )
 }
+export const dynamic = "force-dynamic"
