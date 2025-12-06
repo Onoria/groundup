@@ -8,7 +8,8 @@ export async function setQueued(queued: boolean) {
   if (!userId) throw new Error('Unauthorized')
 
   try {
-    await clerkClient.users.updateUserMetadata(userId, {
+    const client = await clerkClient()  // ← this is the only change needed for v5
+    await client.users.updateUserMetadata(userId, {
       publicMetadata: {
         queued,
         queuedAt: queued ? Date.now() : null,
