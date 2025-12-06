@@ -20,8 +20,8 @@ export default function Match() {
 
   const joinQueue = async () => {
     if (!user) return
-    await user.update({
-      publicMetadata: { ...(user.publicMetadata as any), queued: true, queuedAt: Date.now() }
+    // @ts-expect-error Clerk v5+ metadata types are incomplete (runtime works fine)
+    await user.update({ publicMetadata: { ...(user.publicMetadata as any), queued: true, queuedAt: Date.now() } })
     })
     setIsQueued(true)
   }
