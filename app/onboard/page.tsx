@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useUser, useClerk } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const schema = z.object({
@@ -17,17 +18,27 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function Onboard() {
-  const { user } = useUser()
-  const { updateUser } = useClerk()
+  const { user, isLoaded } = useUser()
+  const router = useRouter()
   const [step, setStep] = useState(1)
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
+  if (!isLoaded) return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+
   const onSubmit = async (data: FormData) => {
-    await updateUser({ publicMetadata: { ...user.publicMetadata, ...data } })
-    // Redirect to dashboard
-    window.location.href = '/dashboard'
+    if (user) {
+      try {
+        await user.update({
+          publicMetadata: { ...user.publicMetadata, ...data }
+        })
+      } catch (error) {
+        console.error('Metadata update failed:', error)
+        // Still redirect on error for MVP
+      }
+    }
+    router.push('/dashboard')
   }
 
   const roles = ['Founder', 'Developer', 'Designer', 'Marketer']
@@ -36,7 +47,7 @@ export default function Onboard() {
   const industries = ['Fintech', 'Health', 'SaaS', 'Ecommerce']
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-black text-white">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 to-black text-white px-4">
       <div className="max-w-md w-full space-y-8 p-8 bg-white/10 rounded-xl">
         <h1 className="text-3xl font-bold text-center">Assemble Your Profile</h1>
         <p className="text-gray-300 text-center">Step {step}/4: Tell us about you for perfect matches.</p>
@@ -48,7 +59,7 @@ export default function Onboard() {
                 {roles.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
               {errors.role && <p className="text-red-500 text-sm">{errors.role.message}</p>}
-              <button type="button" onClick={() => setStep(2)} className="mt-4 w-full bg-blue-600 rounded p-2">Next</button>
+              <button type="button" onClick={() => setStep(2)} className="mt-4 w-full bg-blue-600 hover:bg-blue-700 rounded p-2 transition">Next</button>
             </div>
           )}
           {step === 2 && (
@@ -57,7 +68,8 @@ export default function Onboard() {
               <select {...register('experience')} className="w-full p-2 rounded bg-gray-800 text-white">
                 {experiences.map(e => <option key={e} value={e}>{e}</option>)}
               </select>
-              <button type="button" onClick={() => setStep(3)} className="mt-4 w-full bg-blue-600 rounded p-2">Next</button>
+              {errors.experience && <p className="text-red-500 text-sm">{errors.experience.message}</p>}
+              <button type="button" onClick={() => setStep(3)} className="mt-4 w-full bg-blue-600 hover:bg-blue-700 rounded p-2 transition">Next</button>
             </div>
           )}
           {step === 3 && (
@@ -66,7 +78,8 @@ export default function Onboard() {
               <select {...register('state')} className="w-full p-2 rounded bg-gray-800 text-white">
                 {states.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
-              <button type="button" onClick={() => setStep(4)} className="mt-4 w-full bg-blue-600 rounded p-2">Next</button>
+              {errors.state && <p className="text-red-500 text-sm">{errors.state.message}</p>}
+              <button type="button" onClick={() => setStep(4)} className="mt-4 w-full bg-blue-600 hover:bg-blue-700 rounded p-2 transition">Next</button>
             </div>
           )}
           {step === 4 && (
@@ -75,12 +88,13 @@ export default function Onboard() {
               <select {...register('industry')} className="w-full p-2 rounded bg-gray-800 text-white">
                 {industries.map(i => <option key={i} value={i}>{i}</option>)}
               </select>
-              <button type="submit" className="mt-4 w-full bg-green-600 rounded p-2">Save & Find Party</button>
-              <Link href="/dashboard" className="block text-center text-gray-400 mt-2">Skip for now</Link>
+              {errors.industry && <p className="text-red-500 text-sm">{errors.industry.message}</p>}
+              <button type="submit" className="mt-4 w-full bg-green-600 hover:bg-green-700 rounded p-2 transition">Save & Find Party</button>
+              <Link href="/dashboard" className="block text-center text-gray-400 mt-2 hover:text-white transition">Skip for now</Link>
             </div>
           )}
         </form>
-        <button className="w-full text-sm text-gray-400">Connect LinkedIn (Coming Soon)</button>
+        <button className="w-full text-sm text-gray-400 hover:text-white transition">Connect LinkedIn (Coming Soon)</button>
       </div>
     </div>
   )
