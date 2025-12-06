@@ -2,68 +2,82 @@
 
 import { useState } from 'react'
 import { setQueued } from '@/lib/updateMetadata'
+import { UserButton, useUser } from '@clerk/nextjs'
+import Link from 'next/link'
 
 export default function MatchPage() {
+  const { user } = useUser()
   const [isQueued, setIsQueued] = useState(false)
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const joinQueue = async () => {
+  const joinPool = async () => {
     setError(null)
     setIsPending(true)
     try {
       await setQueued(true)
       setIsQueued(true)
     } catch (err: any) {
-      setError(err.message || 'Something went wrong – please try again')
+      setError('Failed to join — please try again')
     } finally {
       setIsPending(false)
     }
   }
 
-  const leaveQueue = async () => {
+  const leavePool = async () => {
     setError(null)
     setIsPending(true)
     try {
       await setQueued(false)
       setIsQueued(false)
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong – please try again')
     } finally {
       setIsPending(false)
     }
   }
 
   return (
-    <div className="max-w-2xl mx-auto pt-20 text-center">
-      <h1 className="text-4xl font-bold mb-8">Find Your Startup Team</h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded mb-8 max-w-md mx-auto">
-          {error}
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
+          <Link href="/" className="text-xl font-semibold">GroundUp</Link>
+          <UserButton afterSignOutUrl="/" />
         </div>
-      )}
+      </header>
 
-      {!isQueued ? (
-        <button
-          onClick={joinQueue}
-          disabled={isPending}
-          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-6 px-12 rounded text-2xl transition"
-        >
-          {isPending ? 'Joining Queue...' : 'Join the Queue'}
-        </button>
-      ) : (
-        <div>
-          <p className="text-3xl mb-6">✅ You are in the queue!</p>
+      <main className="max-w-2xl mx-auto pt-24 px-6 text-center">
+        <h1 className="text-4xl font-light tracking-tight text-gray-900 mb-6">
+          Ready to meet your co-founders?
+        </h1>
+
+        {error && (
+          <div className="mb-8 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {!isQueued ? (
           <button
-            onClick={leaveQueue}
+            onClick={joinPool}
             disabled={isPending}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-10 rounded"
+            className="bg-black hover:bg-gray-800 disabled:opacity-50 text-white font-medium text-lg px-12 py-5 rounded-xl transition"
           >
-            Leave Queue
+            {isPending ? 'Joining pool...' : 'Join Matching Pool'}
           </button>
-        </div>
-      )}
+        ) : (
+          <div>
+            <p className="text-2xl text-gray-800 mb-8">
+              You’re in the matching pool
+            </p>
+            <button
+              onClick={leavePool}
+              disabled={isPending}
+              className="text-gray-600 underline hover:text-black"
+            >
+              Leave pool
+            </button>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
