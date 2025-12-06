@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 export default function Match() {
   const { user, isLoaded } = useUser()
-  const [queue, setQueue] = useState([]) // MVP: in-memory; Prisma DB later
+  const [queue, setQueue] = useState<string[]>([]) // Explicit type for TS
   const [isQueued, setIsQueued] = useState(false)
 
   useEffect(() => {
