@@ -35,11 +35,11 @@ export default function MatchPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto pt-20">
+    <div className="max-w-2xl mx-auto pt-20 text-center">
       <h1 className="text-4xl font-bold mb-8">Find Your Startup Team</h1>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded mb-8 max-w-md mx-auto">
           {error}
         </div>
       )}
@@ -48,17 +48,17 @@ export default function MatchPage() {
         <button
           onClick={joinQueue}
           disabled={isPending}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-6 px-8 rounded text-2xl transition"
+          className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold py-6 px-12 rounded text-2xl transition"
         >
           {isPending ? 'Joining Queue...' : 'Join the Queue'}
         </button>
       ) : (
-        <div className="text-center">
-          <p className="text-2xl mb-6">✅ You are in the queue!</p>
+        <div>
+          <p className="text-3xl mb-6">✅ You are in the queue!</p>
           <button
             onClick={leaveQueue}
             disabled={isPending}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded"
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-10 rounded"
           >
             Leave Queue
           </button>
