@@ -36,7 +36,7 @@ export default function Match() {
             </button>
           </form>
         ) : (
-          <p className="text-green-600 mb-8">You’re in the queue! <Link href="/dashboard" className="underline">Back to dashboard</Link></p>
+          <p className="text-green-600 mb-8">You're in the queue! <Link href="/dashboard" className="underline">Back to dashboard</Link></p>
         )}
 
         <div className="mt-8 text-center">
