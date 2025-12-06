@@ -9,9 +9,10 @@ export async function updateUserMetadata(prevState: { success: boolean }, formDa
   if (!userId) return { success: false }
 
   const client = await clerkClient()
+  const currentUser = await client.users.getUser(userId)
   const updates = {
     publicMetadata: {
-      ...(await clerkClient().users.getUser(userId)).publicMetadata || {},
+      ...currentUser.publicMetadata || {},
       ...Object.fromEntries(formData.entries())
     }
   }
