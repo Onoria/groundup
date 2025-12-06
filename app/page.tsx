@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <div className="space-y-24 py-12">
       {/* Hero */}
-      <section className="text-center">
+      <section className="section-shell card-dark text-center">
         <h1 className="heading">GroundUp</h1>
         <p className="mt-6 text-xl text-cyan-300 font-light">Prove skills. Form teams. Build empires.</p>
 
@@ -47,15 +47,15 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="text-center">
-        <h2 className="text-5xl font-bold text-cyan-400 mb-16">How GroundUp Works</h2>
-        <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
+      <section className="section-shell card-dark">
+        <h2 className="text-5xl font-bold text-cyan-400 mb-16 text-center">How GroundUp Works</h2>
+        <div className="grid md:grid-cols-3 gap-12">
           {[
             { n: "1", title: "Verify Privately", desc: "Zero-knowledge proofs confirm skills without revealing details." },
             { n: "2", title: "Match & 21-Day Chemistry", desc: "AI forms balanced teams; trial period ensures perfect fit." },
             { n: "3", title: "Incorporate & Execute", desc: "Legal templates + progress tracking for your state/industry." },
           ].map((step) => (
-            <div key={step.n} className="glass p-10 text-center">
+            <div key={step.n} className="step-card text-center">
               <div className="text-7xl font-black text-cyan-400 mb-6">{step.n}</div>
               <h4 className="text-2xl font-bold mb-4">{step.title}</h4>
               <p className="text-gray-400 leading-relaxed">{step.desc}</p>
