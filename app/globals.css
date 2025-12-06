@@ -5,42 +5,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --background: 222.2 84% 4.9%;
+  --background: 222 47% 11%;
   --foreground: 0 0% 98%;
-  --accent: 189 100% 50%;
-  --glass: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
+  --accent: 182 100% 50%;
 }
 
 @layer components {
   .glass {
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
   }
 
-  .btn-primary {
-    @apply bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105;
+  .btn-green {
+    @apply bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold px-8 py-5 rounded-xl shadow-lg transform transition hover:scale-105;
   }
 
-  .btn-success {
-    @apply bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105;
+  .btn-cyan {
+    @apply bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold px-8 py-5 rounded-xl shadow-lg transform transition hover:scale-105;
   }
 
-  .heading-cyan {
-    @apply text-7xl font-extralight tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400;
+  .heading {
+    @apply text-8xl font-extralight tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400;
   }
 }
