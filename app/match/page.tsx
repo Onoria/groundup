@@ -1,16 +1,16 @@
 'use client'
 
-import { useUser } from "@/src/lib/updateMetadata"
-import { useState, useEffect } from "@/src/lib/updateMetadata"
-import { updateQueueStatus } from "@/src/lib/updateMetadata"
-import Link from "@/src/lib/updateMetadata"
+import { useUser } from '@clerk/nextjs'
+import { useState, useEffect } from 'react'
+import { setQueued } from '@/lib/updateMetadata'
+import Link from 'next/link'
 
 export default function Match() {
-  const { user, isLoaded } = useUser()
+  const { user,|B isLoaded } = useUser()
   const [isQueued, setIsQueued] = useState(false)
 
   useEffect(() => {
-    if (user?.publicMetadata?.queued) setIsQueued(true)
+    if (user?.publicMetadata?.queued === true) setIsQueued(true)
   }, [user])
 
   if (!isLoaded || !user) return <div className="flex min-h-screen items-center justify-center">Loading...</div>
@@ -25,15 +25,15 @@ export default function Match() {
 
         {!isQueued ? (
           <form action={async () => {
-            await updateQueueStatus(true)
+            await setQueued(true)
             setIsQueued(true)
           }}>
-            <button type="submit" className="px-8 py-4 bg-green-600 text-white rounded-lg font-semibold mb-8">
+            <button type="submit" className="px-8 py-4 bg-green-600 text-white rounded-lg font-semibold">
               Join Queue as {role}
             </button>
           </form>
         ) : (
-          <p className="text-green-600 mb-8">You’re queued! <Link href="/dashboard" className="underline">Back to Progress</Link></p>
+          <p className="text-green-600 mb-8">You’re in the queue! <Link href="/dashboard" className="underline">Back to dashboard</Link></p>
         )}
 
         <div className="mt-8 text-center">
