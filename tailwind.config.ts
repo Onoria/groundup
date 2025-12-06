@@ -4,13 +4,17 @@ const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx}',
     './components/**/*.{js,ts,jsx,tsx}',
+    // Force Tailwind to keep md:grid-cols-3 even if it thinks it's unused
+    './app/page.tsx',
   ],
   theme: {
-    extend: {},
+    extend: {
+      gridTemplateColumns: {
+        // This makes md:grid-cols-3 always available
+        '3': 'repeat(3, minmax(0, 1fr))',
+      },
+    },
   },
   plugins: [],
-  safelist: [
-    'md:grid-cols-3',  // Force Tailwind to always generate this class
-  ],
 }
 export default config
