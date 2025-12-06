@@ -1,14 +1,22 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export default clerkMiddleware((auth, req) => {
-  // Protect everything except the sign-in/up and home page
-  if (!req.nextUrl.pathname.startsWith('/sign-in') &&
-      !req.nextUrl.pathname.startsWith('/sign-up') &&
-      req.nextUrl.pathname !== '/') {
-    auth().protect()
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/match(.*)',
+  '/team(.*)',
+])
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    const { protect } = await auth()
+    await protect()
   }
 })
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    '/((?!.*\\..*|_next).*)',
+    '/',
+    '/(api|trpc)(.*)',
+  ],
 }
