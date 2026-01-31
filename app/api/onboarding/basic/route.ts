@@ -6,6 +6,8 @@ export async function POST(request: Request) {
   try {
     const { userId } = await auth();
     
+    console.log('Onboarding - userId from auth():', userId);
+    
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -15,6 +17,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    console.log('Onboarding - email:', clerkUser.emailAddresses[0]?.emailAddress);
+
     const body = await request.json();
     const { firstName, lastName, displayName, location, timezone, isRemote } = body;
 
@@ -22,9 +26,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Try to update first (most common case)
+    // Check if user exists first
+    const existingUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    console.log('Existing user found:', !!existingUser);
+
     let user;
-    try {
+    if (existingUser) {
+      // Update existing user
       user = await prisma.user.update({
         where: { clerkId: userId },
         data: {
@@ -38,9 +49,30 @@ export async function POST(request: Request) {
           updatedAt: new Date(),
         },
       });
-    } catch (updateError: any) {
-      // If user doesn't exist, create them
-      if (updateError.code === 'P2025') {
+    } else {
+      // User doesn't exist yet, update by email instead if exists
+      const userByEmail = await prisma.user.findUnique({
+        where: { email: clerkUser.emailAddresses[0]?.emailAddress || '' },
+      });
+
+      if (userByEmail) {
+        // Update the clerkId to match
+        user = await prisma.user.update({
+          where: { email: clerkUser.emailAddresses[0]?.emailAddress || '' },
+          data: {
+            clerkId: userId, // Fix the clerkId
+            firstName,
+            lastName,
+            displayName: displayName || null,
+            location,
+            timezone,
+            isRemote,
+            onboardingStep: 'skills',
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Create new user
         user = await prisma.user.create({
           data: {
             clerkId: userId,
@@ -56,20 +88,12 @@ export async function POST(request: Request) {
             lastLoginAt: new Date(),
           },
         });
-      } else {
-        throw updateError;
       }
     }
 
     return NextResponse.json({ success: true, user });
   } catch (error: any) {
     console.error('Error saving basic info:', error);
-    
-    // Handle duplicate email error gracefully
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
-    }
-    
     return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 });
   }
 }
