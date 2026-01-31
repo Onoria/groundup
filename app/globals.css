@@ -100,24 +100,37 @@
     background: rgba(34, 211, 238, 0.1);
   }
   
-  .form-card {
+  /* Early Access Section */
+  .early-access-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 80px;
+  }
+  
+  .early-access-card {
     background: rgba(30, 41, 59, 0.8);
     border: 1px solid rgba(100, 116, 139, 0.5);
     border-radius: 16px;
     padding: 40px;
     max-width: 460px;
     width: 100%;
-    margin-bottom: 80px;
   }
   
-  .form-card h2 {
+  .early-access-title {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 24px;
     color: #e5e7eb;
   }
   
-  .form-card input {
+  .early-access-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .early-access-input {
     width: 100%;
     padding: 14px 18px;
     background: rgba(15, 23, 42, 0.8);
@@ -125,29 +138,30 @@
     border-radius: 8px;
     color: #e5e7eb;
     font-size: 0.95rem;
-    margin-bottom: 16px;
   }
   
-  .form-card input::placeholder {
+  .early-access-input::placeholder {
     color: #64748b;
   }
   
-  .form-card input:focus {
+  .early-access-input:focus {
     outline: none;
     border-color: #22d3ee;
   }
   
-  .form-card button {
-    width: 100%;
-  }
-  
-  .form-card p {
+  .early-access-footer {
     margin-top: 16px;
     font-size: 0.85rem;
     color: #94a3b8;
   }
   
   /* How It Works Section */
+  .how-section {
+    width: 100%;
+    max-width: 1000px;
+    margin-bottom: 80px;
+  }
+  
   .how-title {
     font-size: clamp(2rem, 4vw, 2.5rem);
     font-weight: 700;
@@ -160,9 +174,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 24px;
-    max-width: 1000px;
-    width: 100%;
-    margin: 0 auto 80px;
   }
   
   .step-card {
