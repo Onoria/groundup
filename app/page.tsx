@@ -3,6 +3,7 @@ import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
+import StatsCounter from "@/components/StatsCounter";
 
 export default async function Home() {
   const { userId } = await auth();
@@ -54,6 +55,7 @@ export default async function Home() {
           </SignedOut>
           <button className="btn btn-outline">See How It Works</button>
         </div>
+          <StatsCounter />
       </section>
 
       <section className="early-access-section">

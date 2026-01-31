@@ -137,6 +137,7 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -365,6 +366,15 @@ export default function ProfilePage() {
   const completion = getCompletion();
 
   /* ── Render ──────────────────────────────── */
+  function copyReferral() {
+    const url = `${window.location.origin}?ref=${profile?.id || ""}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+
+
   return (
     <div className="profile-container">
       {/* ── Header ──────────────────────────── */}
@@ -994,7 +1004,32 @@ export default function ProfilePage() {
         </section>
 
         {/* ── Member Since ─────────────────── */}
-        <section className="profile-footer-info">
+        
+        {/* ── Referral Section ──────────────── */}
+        <section className="profile-section referral-section">
+          <div className="profile-section-header">
+            <h2 className="profile-section-title">Invite Co-Founders</h2>
+          </div>
+          <p className="referral-desc">
+            Share your referral link to invite others to GroundUp
+          </p>
+          <div className="referral-row">
+            <input
+              readOnly
+              className="referral-input"
+              value={typeof window !== "undefined" ? `${window.location.origin}?ref=${profile?.id || ""}` : ""}
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <button
+              className={`referral-copy-btn ${copied ? "referral-copied" : ""}`}
+              onClick={copyReferral}
+            >
+              {copied ? "✓ Copied!" : "Copy Link"}
+            </button>
+          </div>
+        </section>
+
+<section className="profile-footer-info">
           <p>Member since {new Date(profile.createdAt).toLocaleDateString("en-US", {
             month: "long", year: "numeric",
           })}</p>
