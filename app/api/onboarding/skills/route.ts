@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       data: skillRecords.map((skill) => ({
         userId: user.id,
         skillId: skill.id,
-        proficiencyLevel: 'intermediate',
+        proficiency: 'intermediate',
       })),
     });
 
