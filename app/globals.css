@@ -18,15 +18,15 @@
   
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    color: rgb(229, 231, 235);
-    background: radial-gradient(circle at top center, rgb(30, 41, 59) 0%, rgb(2, 6, 23) 50%, rgb(2, 6, 23) 100%);
+    color: #e5e7eb;
+    background: radial-gradient(circle at top center, #1e293b 0%, #020617 50%, #020617 100%);
   }
 }
 
 @layer components {
   .landing {
     min-height: 100vh;
-    padding: 72px 16px 96px 16px;
+    padding: 72px 16px 96px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -42,17 +42,17 @@
     font-size: clamp(3rem, 6vw, 4.5rem);
     font-weight: 700;
     letter-spacing: -0.05em;
-    background: linear-gradient(180deg, rgb(52, 245, 197) 0%, rgb(34, 211, 238) 100%);
+    background: linear-gradient(180deg, #34f5c5 0%, #22d3ee 100%);
     -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     background-clip: text;
-    color: transparent;
     margin-bottom: 24px;
   }
   
   .hero-subtitle {
     font-size: 1rem;
     line-height: 1.6;
-    color: rgb(203, 213, 225);
+    color: #cbd5e1;
     margin-bottom: 32px;
   }
   
@@ -75,22 +75,25 @@
     cursor: pointer;
     border: none;
     transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
   }
   
   .btn-primary {
-    background: rgb(34, 211, 238);
-    color: rgb(2, 6, 23);
+    background: #22d3ee;
+    color: #020617;
   }
   
   .btn-primary:hover {
-    background: rgb(6, 182, 212);
+    background: #06b6d4;
     transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(34, 211, 238, 0.3);
   }
   
   .btn-outline {
     background: transparent;
-    color: rgb(34, 211, 238);
-    border: 2px solid rgb(34, 211, 238);
+    color: #22d3ee;
+    border: 2px solid #22d3ee;
   }
   
   .btn-outline:hover {
@@ -105,13 +108,14 @@
     max-width: 460px;
     width: 100%;
     margin-bottom: 80px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   
   .form-card h2 {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 24px;
-    color: rgb(229, 231, 235);
   }
   
   .form-card input {
@@ -120,13 +124,18 @@
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(100, 116, 139, 0.4);
     border-radius: 8px;
-    color: rgb(229, 231, 235);
+    color: #e5e7eb;
     font-size: 0.95rem;
     margin-bottom: 16px;
   }
   
   .form-card input::placeholder {
-    color: rgb(100, 116, 139);
+    color: #64748b;
+  }
+  
+  .form-card input:focus {
+    outline: none;
+    border-color: #22d3ee;
   }
   
   .form-card button {
@@ -136,7 +145,7 @@
   .form-card p {
     margin-top: 16px;
     font-size: 0.85rem;
-    color: rgb(148, 163, 184);
+    color: #94a3b8;
   }
   
   .how-it-works {
@@ -150,7 +159,6 @@
     font-size: clamp(2rem, 4vw, 2.5rem);
     font-weight: 700;
     margin-bottom: 48px;
-    color: rgb(229, 231, 235);
   }
   
   .steps {
@@ -165,13 +173,15 @@
     border-radius: 12px;
     padding: 32px 24px;
     text-align: left;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   
   .step-number {
     width: 40px;
     height: 40px;
-    background: rgb(34, 211, 238);
-    color: rgb(2, 6, 23);
+    background: #22d3ee;
+    color: #020617;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -184,11 +194,10 @@
     font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 12px;
-    color: rgb(229, 231, 235);
   }
   
   .step p {
-    color: rgb(203, 213, 225);
+    color: #cbd5e1;
     line-height: 1.5;
   }
 }
