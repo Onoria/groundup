@@ -22,37 +22,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Upsert user (create if doesn't exist, update if exists)
-    const user = await prisma.user.upsert({
-      where: { clerkId: userId },
-      create: {
-        clerkId: userId,
-        email: clerkUser.emailAddresses[0]?.emailAddress || '',
-        emailVerified: clerkUser.emailAddresses[0]?.verification?.status === 'verified',
-        firstName,
-        lastName,
-        displayName: displayName || null,
-        location,
-        timezone,
-        isRemote,
-        onboardingStep: 'skills',
-        lastLoginAt: new Date(),
-      },
-      update: {
-        firstName,
-        lastName,
-        displayName: displayName || null,
-        location,
-        timezone,
-        isRemote,
-        onboardingStep: 'skills',
-        updatedAt: new Date(),
-      },
-    });
+    // Try to update first (most common case)
+    let user;
+    try {
+      user = await prisma.user.update({
+        where: { clerkId: userId },
+        data: {
+          firstName,
+          lastName,
+          displayName: displayName || null,
+          location,
+          timezone,
+          isRemote,
+          onboardingStep: 'skills',
+          updatedAt: new Date(),
+        },
+      });
+    } catch (updateError: any) {
+      // If user doesn't exist, create them
+      if (updateError.code === 'P2025') {
+        user = await prisma.user.create({
+          data: {
+            clerkId: userId,
+            email: clerkUser.emailAddresses[0]?.emailAddress || '',
+            emailVerified: clerkUser.emailAddresses[0]?.verification?.status === 'verified',
+            firstName,
+            lastName,
+            displayName: displayName || null,
+            location,
+            timezone,
+            isRemote,
+            onboardingStep: 'skills',
+            lastLoginAt: new Date(),
+          },
+        });
+      } else {
+        throw updateError;
+      }
+    }
 
     return NextResponse.json({ success: true, user });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving basic info:', error);
+    
+    // Handle duplicate email error gracefully
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
+    }
+    
     return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 });
   }
 }
