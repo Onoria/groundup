@@ -1,48 +1,210 @@
-import { redirect } from 'next/navigation'
-import { auth, currentUser } from '@clerk/nextjs/server'
-import { UserButton } from '@clerk/nextjs'
-import Link from 'next/link'
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+import { UserButton } from '@clerk/nextjs';
 
-export default async function Dashboard() {
-  const { userId } = await auth()
-  const user = await currentUser()
-
+export default async function DashboardPage() {
+  const { userId } = await auth();
+  
   if (!userId) {
-    return redirect("/sign-in")
+    redirect('/');
   }
 
+  const clerkUser = await currentUser();
+  
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+    include: {
+      skills: {
+        include: {
+          skill: true,
+        },
+      },
+      teamMemberships: {
+        include: {
+          team: true,
+        },
+      },
+      matchesAsUser: {
+        where: { status: 'pending' },
+      },
+    },
+  });
+
+  if (!user) {
+    redirect('/onboarding');
+  }
+
+  const profileCompletion = calculateProfileCompletion(user);
+  const skillCount = user.skills.length;
+  const teamCount = user.teamMemberships.length;
+  const pendingMatches = user.matchesAsUser.length;
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Your GroundUp Dashboard</h1>
-          <UserButton />
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <p className="text-xl mb-4">
-            Hey {user?.firstName || 'Founder'}! 👋
-          </p>
-          <p className="text-gray-600 mb-8">
-            Ready to assemble your startup party? Let the matching begin.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link href="/match" className="p-6 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 transition">
-              <h3 className="text-2xl font-bold">Find Teammates</h3>
-              <p className="mt-2">Run the matchmaking algorithm</p>
-            </Link>
-            <Link href="/team" className="p-6 bg-green-600 text-white rounded-lg text-center hover:bg-green-700 transition">
-              <h3 className="text-2xl font-bold">My Party</h3>
-              <p className="mt-2">View current team & progress</p>
-            </Link>
-            <div className="p-6 bg-purple-600 text-white rounded-lg text-center">
-              <h3 className="text-2xl font-bold">Subscription Active</h3>
-              <p className="mt-2">Paid monthly · Cancel anytime</p>
-            </div>
+    <div className="dashboard-container">
+      {/* Header */}
+      <header className="dashboard-header">
+        <div className="dashboard-header-content">
+          <h1 className="dashboard-logo">GroundUp</h1>
+          <div className="dashboard-user">
+            <UserButton 
+              appearance={{
+                elements: {
+                  avatarBox: "w-10 h-10",
+                }
+              }}
+            />
           </div>
         </div>
-      </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="dashboard-main">
+        {/* Welcome Section */}
+        <section className="dashboard-welcome">
+          <div className="welcome-content">
+            <h2 className="welcome-title">
+              Hey {user.firstName}! 👋
+            </h2>
+            <p className="welcome-subtitle">
+              Ready to assemble your startup party? Let the matching begin.
+            </p>
+          </div>
+          {profileCompletion < 100 && (
+            <div className="profile-completion-card">
+              <div className="completion-header">
+                <span className="completion-label">Profile Completion</span>
+                <span className="completion-percentage">{profileCompletion}%</span>
+              </div>
+              <div className="completion-bar">
+                <div 
+                  className="completion-fill" 
+                  style={{ width: `${profileCompletion}%` }}
+                ></div>
+              </div>
+              <p className="completion-hint">
+                Complete your profile to get better matches
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* Stats Grid */}
+        <section className="dashboard-stats">
+          <div className="stat-card stat-primary">
+            <div className="stat-icon">🎯</div>
+            <div className="stat-content">
+              <div className="stat-value">{skillCount}</div>
+              <div className="stat-label">Skills Listed</div>
+            </div>
+          </div>
+
+          <div className="stat-card stat-success">
+            <div className="stat-icon">👥</div>
+            <div className="stat-content">
+              <div className="stat-value">{teamCount}</div>
+              <div className="stat-label">Teams</div>
+            </div>
+          </div>
+
+          <div className="stat-card stat-warning">
+            <div className="stat-icon">⚡</div>
+            <div className="stat-content">
+              <div className="stat-value">{pendingMatches}</div>
+              <div className="stat-label">Pending Matches</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Action Cards */}
+        <section className="dashboard-actions">
+          <a href="/match" className="action-card action-primary">
+            <div className="action-icon">🚀</div>
+            <h3 className="action-title">Find Teammates</h3>
+            <p className="action-description">
+              Run the matchmaking algorithm
+            </p>
+          </a>
+
+          <a href="/team" className="action-card action-success">
+            <div className="action-icon">🎉</div>
+            <h3 className="action-title">My Party</h3>
+            <p className="action-description">
+              View current team & progress
+            </p>
+          </a>
+
+          <a href="/profile" className="action-card action-info">
+            <div className="action-icon">⚙️</div>
+            <h3 className="action-title">Profile Settings</h3>
+            <p className="action-description">
+              Update skills & preferences
+            </p>
+          </a>
+        </section>
+
+        {/* Skills Section */}
+        {skillCount > 0 && (
+          <section className="dashboard-section">
+            <h3 className="section-title">Your Skills</h3>
+            <div className="skills-grid">
+              {user.skills.slice(0, 6).map((userSkill) => (
+                <div key={userSkill.id} className="skill-badge">
+                  {userSkill.skill.name}
+                  {userSkill.isVerified && (
+                    <span className="skill-verified">✓</span>
+                  )}
+                </div>
+              ))}
+              {skillCount > 6 && (
+                <div className="skill-badge skill-more">
+                  +{skillCount - 6} more
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Quick Info */}
+        <section className="dashboard-section">
+          <h3 className="section-title">Your Preferences</h3>
+          <div className="info-grid">
+            <div className="info-item">
+              <span className="info-label">Location</span>
+              <span className="info-value">{user.location}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Availability</span>
+              <span className="info-value">{user.availability || 'Not set'}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Industries</span>
+              <span className="info-value">
+                {user.industries?.slice(0, 2).join(', ') || 'None'}
+                {(user.industries?.length || 0) > 2 && ` +${(user.industries?.length || 0) - 2}`}
+              </span>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
-  )
+  );
+}
+
+function calculateProfileCompletion(user: any): number {
+  let completed = 0;
+  const total = 10;
+
+  if (user.firstName) completed++;
+  if (user.lastName) completed++;
+  if (user.bio) completed++;
+  if (user.location) completed++;
+  if (user.avatarUrl) completed++;
+  if (user.skills.length > 0) completed++;
+  if (user.industries?.length > 0) completed++;
+  if (user.rolesLookingFor?.length > 0) completed++;
+  if (user.availability) completed++;
+  if (user.timezone) completed++;
+
+  return Math.round((completed / total) * 100);
 }
