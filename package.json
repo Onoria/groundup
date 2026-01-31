@@ -15,7 +15,8 @@
     "security:audit": "npm audit --audit-level=moderate",
     "security:update": "npm update",
     "test": "jest",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.7.5",
