@@ -82,6 +82,8 @@ model User {
   auditLogs         AuditLog[]
   verifications     Verification[]
   notifications     Notification[]
+  assessmentSessions AssessmentSession[]
+  workingStyle       UserWorkingStyle?
   
   @@index([email])
   @@index([clerkId])
@@ -453,4 +455,101 @@ model WaitlistEntry {
   @@index([status])
   @@index([referralCode])
   @@map("waitlist_entries")
+}
+
+// ==========================================
+// WORKING STYLE ASSESSMENT
+// ==========================================
+
+model AssessmentQuestion {
+  id              String    @id @default(cuid())
+  
+  // Which dimension(s) this question measures
+  dimension       String    // Primary: "risk_tolerance" | "decision_style" | "pace" | "conflict_approach" | "role_gravity" | "communication"
+  
+  // The scenario prompt
+  scenario        String    @db.Text
+  
+  // Two options — no right answer
+  optionAText     String    @db.Text
+  optionBText     String    @db.Text
+  
+  // Score deltas per option (JSON: { "risk_tolerance": +10, "pace": +5 })
+  optionAScores   String    @db.Text
+  optionBScores   String    @db.Text
+  
+  isActive        Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  responses       AssessmentResponse[]
+  
+  @@index([dimension])
+  @@index([isActive])
+  @@map("assessment_questions")
+}
+
+model AssessmentSession {
+  id              String    @id @default(cuid())
+  userId          String
+  
+  completedAt     DateTime?
+  questionIds     String[]  // The 20 question IDs selected for this session
+  version         Int       @default(1) // Which assessment cycle (1st, 2nd, 3rd...)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses       AssessmentResponse[]
+  
+  @@index([userId])
+  @@index([completedAt])
+  @@map("assessment_sessions")
+}
+
+model AssessmentResponse {
+  id              String    @id @default(cuid())
+  sessionId       String
+  questionId      String
+  
+  selectedOption  String    // "A" | "B"
+  responseTimeMs  Int?      // Milliseconds to answer (analytics)
+  
+  createdAt       DateTime  @default(now())
+  
+  session         AssessmentSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question        AssessmentQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+  @@index([questionId])
+  @@map("assessment_responses")
+}
+
+model UserWorkingStyle {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  
+  // Dimension scores (0-100, starting at 50 = neutral)
+  riskTolerance   Float     @default(50)
+  decisionStyle   Float     @default(50)
+  pace            Float     @default(50)
+  conflictApproach Float    @default(50)
+  roleGravity     Float     @default(50)
+  communication   Float     @default(50)
+  
+  // Meta
+  confidence      Float     @default(0)  // 0.0 to 1.0 — increases with more sessions
+  sessionsCount   Int       @default(0)
+  lastAssessedAt  DateTime?
+  nextRefreshAt   DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_working_styles")
 }
