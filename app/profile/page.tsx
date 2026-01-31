@@ -13,6 +13,8 @@ interface UserSkill {
   skillId: string;
   proficiency: string;
   isVerified: boolean;
+  verificationMethod: string | null;
+  verificationData: string | null;
   skill: { id: string; name: string; category: string };
 }
 
@@ -124,6 +126,8 @@ export default function ProfilePage() {
   const [privacyForm, setPrivacyForm] = useState({
     profileVisibility: "public", showEmail: false, showLocation: true,
   });
+  const [verifyingSkillId, setVerifyingSkillId] = useState<string | null>(null);
+  const [proofUrl, setProofUrl] = useState("");
 
   /* ── Fetch profile ───────────────────────── */
   const fetchProfile = useCallback(async () => {
@@ -272,6 +276,25 @@ export default function ProfilePage() {
     if (profile) populateForms(profile);
     setEditingSection(null);
     setError("");
+  }
+
+  async function submitProof() {
+    if (!verifyingSkillId || !proofUrl.trim()) return;
+    setSaving(true); setError("");
+    try {
+      const res = await fetch("/api/profile/skills/verify", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userSkillId: verifyingSkillId, proofUrl: proofUrl.trim() }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      await fetchProfile();
+      setVerifyingSkillId(null);
+      setProofUrl("");
+      flash("Proof submitted for review!");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to submit proof");
+    } finally { setSaving(false); }
   }
 
   /* ── Profile completion ──────────────────── */
@@ -528,7 +551,7 @@ export default function ProfilePage() {
               <span className="profile-section-count">{profile.skills.length}</span>
             </h2>
             {editingSection !== "skills" ? (
-              <button className="profile-edit-btn" onClick={() => setEditingSection("skills")}>
+              <button className="profile-edit-btn" onClick={() => { setEditingSection("skills"); setVerifyingSkillId(null); }}>
                 Edit
               </button>
             ) : (
@@ -621,9 +644,21 @@ export default function ProfilePage() {
                       <h4 className="profile-skill-category-label">{category}</h4>
                       <div className="skills-grid">
                         {skills.map((us) => (
-                          <div key={us.id} className="skill-badge">
+                          <div key={us.id} className={`skill-badge ${us.verificationMethod === "proof_link_pending" ? "skill-badge-pending" : ""}`}>
                             {us.skill.name}
                             {us.isVerified && <span className="skill-verified">✓</span>}
+                            {!us.isVerified && us.verificationMethod === "proof_link_pending" && (
+                              <span className="skill-pending" title="Pending review">⏳</span>
+                            )}
+                            {!us.isVerified && us.verificationMethod !== "proof_link_pending" && (
+                              <button
+                                type="button"
+                                className="skill-verify-link"
+                                onClick={() => { setVerifyingSkillId(us.id); setProofUrl(""); }}
+                              >
+                                Verify
+                              </button>
+                            )}
                             <span
                               className="profile-proficiency-dot"
                               title={us.proficiency}
@@ -641,6 +676,40 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
+
+        {/* ── Verify Skill Form ────────────── */}
+        {verifyingSkillId && (
+          <section className="skill-verify-form">
+            <div className="skill-verify-form-header">
+              <span>Submit proof for </span>
+              <strong>{profile.skills.find((s) => s.id === verifyingSkillId)?.skill.name}</strong>
+            </div>
+            <div className="skill-verify-input-row">
+              <input
+                value={proofUrl}
+                onChange={(e) => setProofUrl(e.target.value)}
+                placeholder="https://github.com/... or portfolio link"
+                className="skill-verify-input"
+              />
+              <button
+                className="profile-save-btn"
+                onClick={submitProof}
+                disabled={saving || !proofUrl.trim()}
+              >
+                {saving ? "..." : "Submit"}
+              </button>
+              <button
+                className="profile-cancel-btn"
+                onClick={() => setVerifyingSkillId(null)}
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="skill-verify-hint">
+              Link to GitHub repos, portfolio, certifications, or other proof of expertise.
+            </p>
+          </section>
+        )}
 
         {/* ── Preferences Section ──────────── */}
         <section className="profile-section">
