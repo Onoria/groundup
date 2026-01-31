@@ -39,8 +39,7 @@ body {
   font-size: clamp(3rem, 6vw, 4.5rem);
   font-weight: 700;
   letter-spacing: -0.05em;
-  background: linear-gradient(180deg, #34f5c5, #22d3ee);
- 100%);
+  background: linear-gradient(180deg, #34f5c5 0%, #22d3ee 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

@@ -1,0 +1,451 @@
+// GROUNDUP DATABASE SCHEMA
+// This Prisma schema includes security best practices:
+// - Audit fields (createdAt, updatedAt)
+// - Soft deletes instead of hard deletes
+// - Encrypted field markers
+// - Proper indexing for security queries
+// - Cascade rules to prevent orphaned data
+
+generator client {
+  provider = "prisma-client-js"
+  // Enable preview features for better performance
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// USER MANAGEMENT
+// ==========================================
+
+model User {
+  id                String    @id @default(cuid())
+  clerkId           String    @unique // Clerk authentication ID
+  email             String    @unique
+  emailVerified     Boolean   @default(false)
+  
+  // Profile Information (some fields should be encrypted in application layer)
+  firstName         String?
+  lastName          String?
+  displayName       String?
+  avatarUrl         String?
+  bio               String?   @db.Text
+  
+  // Location & Availability
+  location          String?
+  timezone          String?
+  isRemote          Boolean   @default(true)
+  availability      String?   // "full-time" | "part-time" | "weekends"
+  
+  // Platform Status
+  isActive          Boolean   @default(true)
+  isVerified        Boolean   @default(false)
+  isBanned          Boolean   @default(false)
+  banReason         String?
+  
+  // Preferences
+  lookingForTeam    Boolean   @default(true)
+  preferredRoles    String[]  // Array of role IDs user is interested in
+  industries        String[]  // Industries of interest
+  
+  // Privacy Settings
+  profileVisibility String    @default("public") // "public" | "members" | "private"
+  showEmail         Boolean   @default(false)
+  showLocation      Boolean   @default(true)
+  
+  // Subscription & Payments
+  subscriptionTier  String    @default("free") // "free" | "premium" | "enterprise"
+  stripeCustomerId  String?   @unique
+  
+  // Audit Fields
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastLoginAt       DateTime?
+  deletedAt         DateTime? // Soft delete
+  
+  // Relations
+  skills            UserSkill[]
+  teamMemberships   TeamMember[]
+  matchesAsUser     Match[]        @relation("UserMatches")
+  matchesAsCandidate Match[]       @relation("CandidateMatches")
+  sentMessages      Message[]      @relation("SentMessages")
+  receivedMessages  Message[]      @relation("ReceivedMessages")
+  auditLogs         AuditLog[]
+  verifications     Verification[]
+  notifications     Notification[]
+  
+  @@index([email])
+  @@index([clerkId])
+  @@index([isActive, lookingForTeam])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// ==========================================
+// SKILLS & VERIFICATION
+// ==========================================
+
+model Skill {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  category    String   // "technical" | "business" | "creative" | "operations"
+  subcategory String?
+  description String?  @db.Text
+  
+  // Verification options
+  isVerifiable Boolean  @default(false)
+  verificationMethod String? // "oauth" | "test" | "endorsement" | "portfolio"
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userSkills  UserSkill[]
+  
+  @@index([category])
+  @@map("skills")
+}
+
+model UserSkill {
+  id              String    @id @default(cuid())
+  userId          String
+  skillId         String
+  
+  // Self-reported proficiency
+  proficiency     String    // "beginner" | "intermediate" | "advanced" | "expert"
+  yearsExperience Int?
+  
+  // Verification status
+  isVerified      Boolean   @default(false)
+  verifiedAt      DateTime?
+  verificationMethod String?
+  verificationData String?  @db.Text // Encrypted JSON with proof
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill           Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+  @@index([isVerified])
+  @@map("user_skills")
+}
+
+model Verification {
+  id              String    @id @default(cuid())
+  userId          String
+  verificationType String   // "email" | "phone" | "linkedin" | "github" | "identity"
+  
+  status          String    @default("pending") // "pending" | "verified" | "failed"
+  externalId      String?   // ID from verification provider
+  metadata        String?   @db.Text // Encrypted JSON
+  
+  verifiedAt      DateTime?
+  expiresAt       DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([verificationType])
+  @@map("verifications")
+}
+
+// ==========================================
+// MATCHING SYSTEM
+// ==========================================
+
+model Match {
+  id              String    @id @default(cuid())
+  userId          String    // Person who initiated/is being matched
+  candidateId     String    // Potential match
+  
+  // Match quality
+  matchScore      Float     // 0-100
+  compatibility   String?   @db.Text // JSON with compatibility breakdown
+  
+  // Status tracking
+  status          String    @default("suggested") // "suggested" | "viewed" | "interested" | "accepted" | "rejected" | "expired"
+  
+  // Communication
+  hasMessaged     Boolean   @default(false)
+  
+  // Timestamps
+  suggestedAt     DateTime  @default(now())
+  viewedAt        DateTime?
+  respondedAt     DateTime?
+  expiresAt       DateTime? // Matches expire after X days
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation("UserMatches", fields: [userId], references: [id], onDelete: Cascade)
+  candidate       User      @relation("CandidateMatches", fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status])
+  @@index([candidateId, status])
+  @@index([expiresAt])
+  @@map("matches")
+}
+
+// ==========================================
+// TEAMS
+// ==========================================
+
+model Team {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?   @db.Text
+  
+  // Team details
+  industry        String?
+  stage           String    @default("forming") // "forming" | "trial" | "committed" | "incorporated" | "dissolved"
+  
+  // Trial period (21 days)
+  trialStartedAt  DateTime?
+  trialEndsAt     DateTime?
+  
+  // Incorporation
+  isIncorporated  Boolean   @default(false)
+  incorporatedAt  DateTime?
+  legalEntity     String?   // Company name
+  jurisdiction    String?   // State/country
+  
+  // Status
+  isActive        Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  
+  members         TeamMember[]
+  messages        Message[]
+  milestones      Milestone[]
+  
+  @@index([stage])
+  @@index([isActive])
+  @@map("teams")
+}
+
+model TeamMember {
+  id              String    @id @default(cuid())
+  teamId          String
+  userId          String
+  
+  // Role in team
+  role            String    // "founder" | "cofounder" | "advisor"
+  title           String?   // "CEO" | "CTO" | "CFO" | etc.
+  
+  // Equity
+  equityPercent   Float?
+  isVested        Boolean   @default(false)
+  vestingSchedule String?   @db.Text // JSON with vesting details
+  
+  // Status
+  status          String    @default("invited") // "invited" | "trial" | "committed" | "left"
+  
+  // Permissions
+  isAdmin         Boolean   @default(false)
+  canInvite       Boolean   @default(false)
+  
+  joinedAt        DateTime  @default(now())
+  leftAt          DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([status])
+  @@map("team_members")
+}
+
+model Milestone {
+  id              String    @id @default(cuid())
+  teamId          String
+  
+  title           String
+  description     String?   @db.Text
+  dueDate         DateTime?
+  
+  isCompleted     Boolean   @default(false)
+  completedAt     DateTime?
+  completedBy     String?   // User ID who marked complete
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@index([teamId])
+  @@index([isCompleted])
+  @@map("milestones")
+}
+
+// ==========================================
+// COMMUNICATION
+// ==========================================
+
+model Message {
+  id              String    @id @default(cuid())
+  senderId        String
+  recipientId     String?   // Null if team message
+  teamId          String?   // Null if direct message
+  
+  content         String    @db.Text // Should be encrypted at application layer
+  isRead          Boolean   @default(false)
+  readAt          DateTime?
+  
+  // Encryption metadata
+  isEncrypted     Boolean   @default(false)
+  encryptionKeyId String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime? // Soft delete
+  
+  sender          User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient       User?     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  team            Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([teamId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id              String    @id @default(cuid())
+  userId          String
+  
+  type            String    // "match" | "message" | "team_invite" | "milestone" | etc.
+  title           String
+  content         String    @db.Text
+  
+  isRead          Boolean   @default(false)
+  readAt          DateTime?
+  
+  // Action link
+  actionUrl       String?
+  actionText      String?
+  
+  createdAt       DateTime  @default(now())
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ==========================================
+// AUDIT & SECURITY
+// ==========================================
+
+model AuditLog {
+  id              String    @id @default(cuid())
+  userId          String?   // Null if system action
+  
+  action          String    // "user.login" | "user.update" | "team.create" | etc.
+  entityType      String    // "user" | "team" | "match" | etc.
+  entityId        String?
+  
+  // Request details
+  ipAddress       String?
+  userAgent       String?
+  
+  // Change tracking
+  oldValues       String?   @db.Text // JSON
+  newValues       String?   @db.Text // JSON
+  
+  // Metadata
+  metadata        String?   @db.Text // Additional context
+  
+  createdAt       DateTime  @default(now())
+  
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SecurityEvent {
+  id              String    @id @default(cuid())
+  
+  eventType       String    // "failed_login" | "rate_limit" | "suspicious_activity" | etc.
+  severity        String    // "low" | "medium" | "high" | "critical"
+  
+  userId          String?
+  ipAddress       String?
+  userAgent       String?
+  
+  description     String    @db.Text
+  metadata        String?   @db.Text // JSON with additional details
+  
+  // Response
+  wasBlocked      Boolean   @default(false)
+  actionTaken     String?
+  
+  createdAt       DateTime  @default(now())
+  
+  @@index([eventType])
+  @@index([severity])
+  @@index([userId])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@map("security_events")
+}
+
+// ==========================================
+// WAITLIST (Pre-launch)
+// ==========================================
+
+model WaitlistEntry {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  
+  // Optional info
+  firstName       String?
+  lastName        String?
+  role            String?   // What role they're interested in
+  industry        String?
+  
+  // Status
+  status          String    @default("pending") // "pending" | "invited" | "converted"
+  invitedAt       DateTime?
+  convertedAt     DateTime?
+  
+  // Referrals
+  referralCode    String?   @unique
+  referredBy      String?   // Email of referrer
+  referralCount   Int       @default(0)
+  
+  // Marketing
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([status])
+  @@index([referralCode])
+  @@map("waitlist_entries")
+}

@@ -1,0 +1,135 @@
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+/**
+ * GROUNDUP SECURITY MIDDLEWARE
+ * Combines Clerk authentication with security headers and rate limiting
+ */
+
+// Rate limiting store (in-memory, use Redis in production)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
+// Configuration
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100');
+const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'); // 15 minutes
+
+/**
+ * Rate limiting function
+ */
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = rateLimitStore.get(identifier);
+
+  if (!record || now > record.resetTime) {
+    rateLimitStore.set(identifier, {
+      count: 1,
+      resetTime: now + RATE_LIMIT_WINDOW,
+    });
+    return true;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  record.count++;
+  return true;
+}
+
+/**
+ * Security headers configuration
+ */
+function getSecurityHeaders() {
+  const headers = new Headers();
+
+  headers.set('X-Frame-Options', 'DENY');
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('X-XSS-Protection', '1; mode=block');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(self), interest-cohort=()'
+  );
+
+  const cspDirectives = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://api.clerk.com https://*.clerk.accounts.dev",
+    "frame-src 'self' https://challenges.cloudflare.com",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+
+  headers.set('Content-Security-Policy', cspDirectives);
+
+  if (process.env.NODE_ENV === 'production') {
+    headers.set(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload'
+    );
+  }
+
+  return headers;
+}
+
+// Define protected routes that require authentication
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/profile(.*)',
+  '/matching(.*)',
+  '/teams(.*)',
+  '/settings(.*)',
+]);
+
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  // Protect routes
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+
+  const { pathname } = req.nextUrl;
+  const identifier = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
+
+  // Rate limiting
+  if (!checkRateLimit(identifier)) {
+    if (!pathname.startsWith('/api')) {
+      return new NextResponse('Too many requests. Please slow down.', {
+        status: 429,
+        headers: { 'Retry-After': '900' },
+      });
+    }
+    return new NextResponse(
+      JSON.stringify({ error: 'Rate limit exceeded' }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': '900',
+        },
+      }
+    );
+  }
+
+  // Get response
+  const response = NextResponse.next();
+
+  // Add security headers
+  const securityHeaders = getSecurityHeaders();
+  securityHeaders.forEach((value, key) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+});
+
+export const config = {
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
+  ],
+};
