@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { setQueued } from '@/lib/updateMetadata'
+import { setQueued } from '@/app/lib/updateMetadata'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 
