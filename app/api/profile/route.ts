@@ -22,6 +22,20 @@ export async function GET() {
           },
           orderBy: { createdAt: "desc" },
         },
+        workingStyle: {
+          select: {
+            riskTolerance: true,
+            decisionStyle: true,
+            pace: true,
+            conflictApproach: true,
+            roleGravity: true,
+            communication: true,
+            confidence: true,
+            sessionsCount: true,
+            lastAssessedAt: true,
+            nextRefreshAt: true,
+          },
+        },
         teamMemberships: {
           where: { status: { in: ["trial", "committed"] } },
           include: { team: true },

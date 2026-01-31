@@ -20,6 +20,13 @@ export default async function DashboardPage() {
           skill: true,
         },
       },
+      workingStyle: {
+        select: {
+          confidence: true,
+          sessionsCount: true,
+          nextRefreshAt: true,
+        },
+      },
       teamMemberships: {
         include: {
           team: true,

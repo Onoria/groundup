@@ -18,6 +18,19 @@ interface UserSkill {
   skill: { id: string; name: string; category: string };
 }
 
+interface WorkingStyleData {
+  riskTolerance: number;
+  decisionStyle: number;
+  pace: number;
+  conflictApproach: number;
+  roleGravity: number;
+  communication: number;
+  confidence: number;
+  sessionsCount: number;
+  lastAssessedAt: string | null;
+  nextRefreshAt: string | null;
+}
+
 interface UserProfile {
   id: string;
   clerkId: string;
@@ -842,6 +855,55 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+        </section>
+
+        {/* ── Working Style Section ───────────── */}
+        <section className="profile-section">
+          <div className="profile-section-header">
+            <h2 className="profile-section-title">Working Style</h2>
+            {profile.workingStyle ? (
+              <a href="/assessment" className="profile-edit-btn">Retake</a>
+            ) : (
+              <a href="/assessment" className="profile-edit-btn assess-take-btn">Take Assessment</a>
+            )}
+          </div>
+
+          {profile.workingStyle ? (
+            <div className="ws-profile-grid">
+              {Object.keys(WS_LABELS).map((dim) => {
+                const score = profile.workingStyle![dim as keyof WorkingStyleData] as number;
+                const info = WS_LABELS[dim];
+                const label = getWsLabel(dim, score);
+                return (
+                  <div key={dim} className="ws-profile-item">
+                    <div className="ws-profile-item-header">
+                      <span className="ws-profile-icon">{info.icon}</span>
+                      <span className="ws-profile-dim-name">{info.name}</span>
+                    </div>
+                    <div className="ws-profile-bar-wrap">
+                      <div className="ws-profile-bar">
+                        <div className="ws-profile-fill" style={{ width: `${score}%` }} />
+                      </div>
+                    </div>
+                    <div className="ws-profile-labels">
+                      <span className="ws-profile-end">{info.low}</span>
+                      <span className="ws-profile-label">{label}</span>
+                      <span className="ws-profile-end">{info.high}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="ws-profile-meta">
+                <span>Confidence: {Math.round(profile.workingStyle.confidence * 100)}%</span>
+                <span>Sessions: {profile.workingStyle.sessionsCount}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="ws-profile-empty">
+              <span className="profile-nudge-arrow">{"›"}</span>
+              <span>Complete the Working Style Assessment to improve your match quality</span>
             </div>
           )}
         </section>
