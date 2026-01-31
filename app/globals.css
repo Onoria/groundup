@@ -109,8 +109,8 @@
   }
   
   .early-access-card {
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(100, 116, 139, 0.5);
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(100, 116, 139, 0.3);
     border-radius: 16px;
     padding: 40px;
     max-width: 460px;
@@ -133,8 +133,8 @@
   .early-access-input {
     width: 100%;
     padding: 14px 18px;
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(100, 116, 139, 0.5);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(100, 116, 139, 0.4);
     border-radius: 8px;
     color: #e5e7eb;
     font-size: 0.95rem;
@@ -177,8 +177,8 @@
   }
   
   .step-card {
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(100, 116, 139, 0.5);
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(100, 116, 139, 0.3);
     border-radius: 12px;
     padding: 32px 24px;
     text-align: left;
