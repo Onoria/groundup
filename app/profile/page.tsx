@@ -37,6 +37,7 @@ interface UserProfile {
   showEmail: boolean;
   showLocation: boolean;
   lookingForTeam: boolean;
+  workingStyle: WorkingStyleData | null;
   skills: UserSkill[];
   createdAt: string;
 }
@@ -100,6 +101,23 @@ const PROFICIENCY_LEVELS = [
 /* ────────────────────────────────────────────
    Component
    ──────────────────────────────────────────── */
+
+const WS_LABELS: Record<string, { name: string; low: string; high: string; icon: string }> = {
+  riskTolerance: { name: "Risk Tolerance", low: "Incremental Builder", high: "Moonshot Thinker", icon: "🎲" },
+  decisionStyle: { name: "Decision Style", low: "Data-Driven", high: "Gut Instinct", icon: "🧭" },
+  pace: { name: "Work Pace", low: "Steady Marathon", high: "Sprint & Rest", icon: "⚡" },
+  conflictApproach: { name: "Conflict Approach", low: "Diplomatic", high: "Direct", icon: "🤝" },
+  roleGravity: { name: "Role Gravity", low: "Visionary", high: "Executor", icon: "🎯" },
+  communication: { name: "Communication", low: "Async / Written", high: "Sync / Verbal", icon: "💬" },
+};
+
+function getWsLabel(dim: string, score: number): string {
+  const d = WS_LABELS[dim];
+  if (!d) return "";
+  if (score < 35) return d.low;
+  if (score > 65) return d.high;
+  return "Balanced";
+}
 
 export default function ProfilePage() {
   const { user: clerkUser, isLoaded } = useUser();

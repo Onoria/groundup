@@ -43,6 +43,11 @@ export default async function DashboardPage() {
   const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e: string) => e.trim());
   const isAdmin = adminEmails.includes(user.email);
 
+  const hasAssessment = !!user.workingStyle;
+  const needsRefresh = user.workingStyle?.nextRefreshAt
+    ? new Date(user.workingStyle.nextRefreshAt) <= new Date()
+    : false;
+
   return (
     <div className="dashboard-container">
       {/* Header */}
@@ -155,6 +160,28 @@ export default async function DashboardPage() {
             </a>
           )}
         </section>
+
+        {/* Assessment Nudge */}
+        {(!hasAssessment || needsRefresh) && (
+          <section className="assess-nudge">
+            <div className="assess-nudge-content">
+              <span className="assess-nudge-icon">{hasAssessment ? "🔄" : "🧠"}</span>
+              <div>
+                <p className="assess-nudge-title">
+                  {hasAssessment ? "Time to refresh your Working Style" : "Complete Your Working Style Assessment"}
+                </p>
+                <p className="assess-nudge-desc">
+                  {hasAssessment
+                    ? "New questions are available to improve your match accuracy."
+                    : "Answer 20 quick questions to find better co-founder matches."}
+                </p>
+              </div>
+              <a href="/assessment" className="assess-nudge-btn">
+                {hasAssessment ? "Retake" : "Start"} →
+              </a>
+            </div>
+          </section>
+        )}
 
         {/* Skills Section */}
         {skillCount > 0 && (

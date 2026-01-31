@@ -2197,3 +2197,169 @@
     align-items: center;
   }
 }
+
+/* ========================================
+   WORKING STYLE — PROFILE VIEW
+   ======================================== */
+
+.assess-take-btn {
+  background: linear-gradient(135deg, #22d3ee, #34f5c5) !important;
+  color: #020617 !important;
+  border: none !important;
+  font-weight: 700 !important;
+  animation: nudge-glow 2.5s ease-in-out infinite;
+}
+
+.ws-profile-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ws-profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ws-profile-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ws-profile-icon {
+  font-size: 1rem;
+}
+
+.ws-profile-dim-name {
+  font-weight: 600;
+  color: #e5e7eb;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ws-profile-bar-wrap {
+  padding: 0 4px;
+}
+
+.ws-profile-bar {
+  height: 6px;
+  background: rgba(100, 116, 139, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ws-profile-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22d3ee, #34f5c5);
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+
+.ws-profile-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ws-profile-end {
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.ws-profile-label {
+  color: #22d3ee;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.ws-profile-meta {
+  display: flex;
+  gap: 24px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(100, 116, 139, 0.15);
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.ws-profile-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.9rem;
+  padding: 12px 0;
+}
+
+/* ========================================
+   ASSESSMENT NUDGE — DASHBOARD
+   ======================================== */
+
+.assess-nudge {
+  margin-bottom: 32px;
+}
+
+.assess-nudge-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: rgba(34, 211, 238, 0.06);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+.assess-nudge-content:hover {
+  border-color: rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.1);
+}
+
+.assess-nudge-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.assess-nudge-title {
+  color: #e5e7eb;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.assess-nudge-desc {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.assess-nudge-btn {
+  margin-left: auto;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #22d3ee, #34f5c5);
+  color: #020617;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.assess-nudge-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(34, 211, 238, 0.4);
+}
+
+@media (max-width: 768px) {
+  .assess-nudge-content {
+    flex-wrap: wrap;
+  }
+
+  .assess-nudge-btn {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+}
