@@ -1,10 +1,39 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs'
-import Link from 'next/link'
+import Link from 'next/link';
+import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
 
-export default function HomePage() {
+export default async function Home() {
+  const { userId } = await auth();
+  
+  // If user is signed in, check onboarding status
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { onboardingStep: true },
+    });
+    
+    // Redirect to appropriate onboarding step or dashboard
+    if (user) {
+      if (!user.onboardingStep || user.onboardingStep === 'basic') {
+        redirect('/onboarding');
+      } else if (user.onboardingStep === 'skills') {
+        redirect('/onboarding/skills');
+      } else if (user.onboardingStep === 'preferences') {
+        redirect('/onboarding/preferences');
+      } else if (user.onboardingStep === 'complete') {
+        redirect('/dashboard');
+      }
+    } else {
+      // User signed in but not in database yet (webhook might be processing)
+      // Redirect to onboarding anyway
+      redirect('/onboarding');
+    }
+  }
+
   return (
     <div className="landing">
-      {/* HERO */}
       <section className="hero">
         <h1 className="hero-title">GroundUp</h1>
         <div className="hero-subtitle">
@@ -12,10 +41,9 @@ export default function HomePage() {
           <p>Form balanced founding teams for tech startups or blue-collar empires.</p>
           <p>Incorporate in week one. Hire verified American labor. Build real companies from the ground up.</p>
         </div>
-
         <div className="hero-actions">
           <SignedIn>
-            <Link href="/match">
+            <Link href="/dashboard">
               <button className="btn btn-primary">Join the Waitlist – $49/mo</button>
             </Link>
           </SignedIn>
@@ -28,7 +56,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* EARLY ACCESS */}
       <section className="early-access-section">
         <div className="early-access-card">
           <h2 className="early-access-title">Get Early Access</h2>
@@ -44,7 +71,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
       <section className="how-section">
         <h2 className="how-title">How GroundUp Works</h2>
         <div className="how-steps">
@@ -66,5 +92,5 @@ export default function HomePage() {
         </div>
       </section>
     </div>
-  )
+  );
 }
