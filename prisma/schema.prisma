@@ -41,6 +41,11 @@ model User {
   isRemote          Boolean   @default(true)
   availability      String?   // "full-time" | "part-time" | "weekends"
   
+  // Onboarding
+  onboardingStep         String?   // "basic" | "skills" | "preferences" | "complete"
+  onboardingCompletedAt  DateTime?
+  rolesLookingFor        String[]  // Roles they want on their team
+
   // Platform Status
   isActive          Boolean   @default(true)
   isVerified        Boolean   @default(false)
