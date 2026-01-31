@@ -40,6 +40,9 @@ export default async function DashboardPage() {
   const teamCount = user.teamMemberships.length;
   const pendingMatches = user.matchesAsUser.length;
 
+  const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e: string) => e.trim());
+  const isAdmin = adminEmails.includes(user.email);
+
   return (
     <div className="dashboard-container">
       {/* Header */}
@@ -141,6 +144,16 @@ export default async function DashboardPage() {
               Update skills & preferences
             </p>
           </a>
+
+          {isAdmin && (
+            <a href="/admin/verifications" className="action-card action-admin">
+              <div className="action-icon">🛡️</div>
+              <h3 className="action-title">Admin Panel</h3>
+              <p className="action-description">
+                Review skill verifications
+              </p>
+            </a>
+          )}
         </section>
 
         {/* Skills Section */}
