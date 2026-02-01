@@ -1,5 +1,7 @@
 "use client";
 
+import NotificationBell from "@/components/NotificationBell";
+
 import { useState, useEffect, useCallback } from "react";
 
 interface MatchCandidate {
@@ -142,7 +144,10 @@ export default function MatchPage() {
       <header className="match-header">
         <div className="match-header-content">
           <a href="/dashboard" className="match-back">← Dashboard</a>
-          <h1 className="match-logo">GroundUp</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <NotificationBell />
+            <h1 className="match-logo">GroundUp</h1>
+          </div>
         </div>
       </header>
 

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { clerkId },
-      select: { id: true },
+      select: { id: true, firstName: true, displayName: true },
     });
 
     if (!user) {
@@ -37,8 +37,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
     }
 
-    // Update match status
-    const updated = await prisma.match.update({
+    // Update my match status
+    await prisma.match.update({
       where: { id: matchId },
       data: {
         status: action,
@@ -47,9 +47,10 @@ export async function POST(req: Request) {
       },
     });
 
-    // Check for mutual interest
     let mutual = false;
+
     if (action === "interested") {
+      // Check if the other person's mirror match is also "interested"
       const reverseMatch = await prisma.match.findFirst({
         where: {
           userId: match.candidateId,
@@ -67,7 +68,67 @@ export async function POST(req: Request) {
           data: { status: "accepted" },
         });
         mutual = true;
+
+        // Notify both users
+        const myName = user.displayName || user.firstName || "Someone";
+
+        await prisma.notification.create({
+          data: {
+            userId: match.candidateId,
+            type: "match",
+            title: "🎉 Mutual match!",
+            content: `You and ${myName} are both interested! You can now connect.`,
+            actionUrl: "/match",
+            actionText: "View Match",
+          },
+        });
+
+        await prisma.notification.create({
+          data: {
+            userId: user.id,
+            type: "match",
+            title: "🎉 Mutual match!",
+            content: `It's mutual! You can now connect with your match.`,
+            actionUrl: "/match",
+            actionText: "View Match",
+          },
+        });
+      } else {
+        // Not mutual yet — notify the other person that someone is interested
+        // (Don't reveal who, just prompt them to check matches)
+        await prisma.notification.create({
+          data: {
+            userId: match.candidateId,
+            type: "match",
+            title: "Someone is interested!",
+            content: "A match has expressed interest in you. Check your matches to respond!",
+            actionUrl: "/match",
+            actionText: "View Matches",
+          },
+        });
+
+        // Also update the mirror match to "viewed" so it surfaces higher
+        await prisma.match.updateMany({
+          where: {
+            userId: match.candidateId,
+            candidateId: match.userId,
+            status: "suggested",
+          },
+          data: { viewedAt: new Date() },
+        });
       }
+    }
+
+    if (action === "rejected") {
+      // Also reject the mirror match so it stops showing for the other person
+      await prisma.match.updateMany({
+        where: {
+          userId: match.candidateId,
+          candidateId: match.userId,
+          status: { in: ["suggested", "viewed"] },
+        },
+        data: { status: "rejected", respondedAt: new Date() },
+      });
     }
 
     return NextResponse.json({

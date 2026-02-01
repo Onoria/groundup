@@ -61,6 +61,7 @@ export default async function DashboardPage() {
       <header className="dashboard-header">
         <div className="dashboard-header-content">
           <h1 className="dashboard-logo">GroundUp</h1>
+            <NotificationBell />
           <div className="dashboard-user">
             <UserButton 
               appearance={{

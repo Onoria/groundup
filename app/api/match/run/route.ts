@@ -29,7 +29,6 @@ export async function POST() {
   }
 
   try {
-    // Get current user with full data
     const me = await prisma.user.findUnique({
       where: { clerkId },
       include: {
@@ -53,14 +52,13 @@ export async function POST() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // IDs to exclude (already matched or self)
+    // IDs to exclude (already have an active match pair)
     const excludeIds = new Set<string>([
       me.id,
       ...me.matchesAsUser.map((m) => m.candidateId),
       ...me.matchesAsCandidate.map((m) => m.userId),
     ]);
 
-    // Get all eligible candidates
     const candidates = await prisma.user.findMany({
       where: {
         id: { notIn: Array.from(excludeIds) },
@@ -73,7 +71,6 @@ export async function POST() {
       include: USER_INCLUDE,
     });
 
-    // Score each candidate
     const scored: {
       candidate: typeof candidates[0];
       score: number;
@@ -90,19 +87,17 @@ export async function POST() {
       }
     }
 
-    // Sort by score descending
     scored.sort((a, b) => b.score - a.score);
-
-    // Take top 20
     const topMatches = scored.slice(0, 20);
 
-    // Create match records
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 14);
 
+    // Create match records for BOTH sides
     const createdMatches = await Promise.all(
-      topMatches.map(({ candidate, score, breakdown }) =>
-        prisma.match.create({
+      topMatches.map(async ({ candidate, score, breakdown }) => {
+        // My record (me → them)
+        const myMatch = await prisma.match.create({
           data: {
             userId: me.id,
             candidateId: candidate.id,
@@ -115,11 +110,51 @@ export async function POST() {
             status: "suggested",
             expiresAt,
           },
-        })
-      )
+        });
+
+        // Mirror record (them → me)
+        // Check if they already have a record for me
+        const existing = await prisma.match.findFirst({
+          where: {
+            userId: candidate.id,
+            candidateId: me.id,
+            status: { in: ["suggested", "viewed", "interested", "accepted"] },
+          },
+        });
+
+        if (!existing) {
+          await prisma.match.create({
+            data: {
+              userId: candidate.id,
+              candidateId: me.id,
+              matchScore: score,
+              compatibility: JSON.stringify({
+                myPerspective: breakdown.breakdownB,
+                theirPerspective: breakdown.breakdownA,
+                bidirectionalScore: score,
+              }),
+              status: "suggested",
+              expiresAt,
+            },
+          });
+
+          // Notify the other person
+          await prisma.notification.create({
+            data: {
+              userId: candidate.id,
+              type: "match",
+              title: "New match found!",
+              content: `You have a new ${score}% match. Check your matches to see who it is!`,
+              actionUrl: "/match",
+              actionText: "View Matches",
+            },
+          });
+        }
+
+        return myMatch;
+      })
     );
 
-    // Return matches with candidate info
     const response = topMatches.map(({ candidate, score, breakdown }, i) => ({
       matchId: createdMatches[i].id,
       score,
@@ -135,11 +170,15 @@ export async function POST() {
         availability: candidate.availability,
         isRemote: candidate.isRemote,
         industries: candidate.industries,
+        isMentor: (candidate as any).isMentor || false,
+        seekingMentor: (candidate as any).seekingMentor || false,
         skills: candidate.skills.map((s) => ({
           name: s.skill.name,
           category: s.skill.category,
           proficiency: s.proficiency,
           isVerified: s.isVerified,
+          xp: (s as any).xp || 0,
+          level: (s as any).level || 1,
         })),
         hasWorkingStyle: !!candidate.workingStyle,
       },
