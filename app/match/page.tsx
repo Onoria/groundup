@@ -58,6 +58,11 @@ export default function MatchPage() {
   const [toast, setToast] = useState<{ type: string; msg: string } | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Team formation
+  const [formingTeamForMatch, setFormingTeamForMatch] = useState<string | null>(null);
+  const [teamFormName, setTeamFormName] = useState("");
+  const [teamFormLoading, setTeamFormLoading] = useState(false);
+
   const showToast = (type: string, msg: string) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3000);
@@ -142,6 +147,30 @@ export default function MatchPage() {
     if (!m.breakdown) return null;
     if ("myPerspective" in m.breakdown) return m.breakdown.myPerspective;
     return m.breakdown as MatchBreakdown;
+  }
+
+  async function formTeam(matchId: string) {
+    if (!teamFormName.trim()) return;
+    setTeamFormLoading(true);
+    try {
+      const res = await fetch("/api/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, name: teamFormName.trim() }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast("error", data.error);
+      } else {
+        window.location.href = "/team/" + data.team.id;
+      }
+    } catch {
+      showToast("error", "Failed to create team");
+    } finally {
+      setTeamFormLoading(false);
+      setFormingTeamForMatch(null);
+      setTeamFormName("");
+    }
   }
 
   return (
@@ -388,8 +417,44 @@ export default function MatchPage() {
                 )}
 
                 {m.status === "accepted" && (
-                  <div className="match-status-badge match-status-mutual">
-                    🎉 Mutual Match — Ready to connect!
+                  <div className="match-mutual-block">
+                    <div className="match-status-badge match-status-mutual">
+                      Mutual Match!
+                    </div>
+                    {formingTeamForMatch === m.matchId ? (
+                      <div className="match-form-team-inline">
+                        <input
+                          className="match-form-team-input"
+                          placeholder="Team name..."
+                          value={teamFormName}
+                          onChange={(e) => setTeamFormName(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && formTeam(m.matchId)}
+                          autoFocus
+                        />
+                        <div className="match-form-team-actions">
+                          <button
+                            className="match-btn match-btn-interested"
+                            onClick={() => formTeam(m.matchId)}
+                            disabled={teamFormLoading || !teamFormName.trim()}
+                          >
+                            {teamFormLoading ? "Creating..." : "Create Team"}
+                          </button>
+                          <button
+                            className="match-btn match-btn-pass"
+                            onClick={() => { setFormingTeamForMatch(null); setTeamFormName(""); }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="match-btn match-btn-form-team"
+                        onClick={() => setFormingTeamForMatch(m.matchId)}
+                      >
+                        Form a Team
+                      </button>
+                    )}
                   </div>
                 )}
 
