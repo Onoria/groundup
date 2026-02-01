@@ -177,6 +177,14 @@ export default async function DashboardPage() {
             </p>
           </a>
 
+          <a href="/resources" className="action-card action-resources">
+            <div className="action-icon">📚</div>
+            <h3 className="action-title">Resources</h3>
+            <p className="action-description">
+              Business formation guides
+            </p>
+          </a>
+
           {isAdmin && (
             <a href="/admin/verifications" className="action-card action-admin">
               <div className="action-icon">🛡️</div>
