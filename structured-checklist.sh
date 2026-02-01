@@ -55,7 +55,6 @@ if 'data ' not in content.split('FormationCheck')[1].split('}')[0] if 'Formation
                 patched = True
     
     if patched:
-    if patched:
         open("prisma/schema.prisma", "w").write(content)
         print("  Added data fields to FormationCheck")
     else:

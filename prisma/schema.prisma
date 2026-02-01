@@ -675,6 +675,11 @@ model FormationCheck {
   completedBy String?   // User ID who checked it
   completedAt DateTime?
   
+  // Structured data entry
+  data        String?   @db.Text // JSON: {value, secondary, selection}
+  assignedTo  String?   // User ID assigned to this item
+  dueDate     DateTime?
+  
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   

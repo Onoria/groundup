@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { FORMATION_STAGES, STAGE_ITEM_COUNTS } from "@/lib/formation-stages";
 
-// GET — Get checklist status for a stage (or all stages)
+// GET — Checklist status with data for a stage or all stages
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -15,7 +15,6 @@ export async function GET(
   const user = await prisma.user.findUnique({ where: { clerkId } });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  // Verify membership
   const membership = await prisma.teamMember.findFirst({
     where: { teamId, userId: user.id, status: { not: "left" } },
   });
@@ -26,7 +25,6 @@ export async function GET(
   const url = new URL(request.url);
   const stageParam = url.searchParams.get("stage");
 
-  // Fetch completed checks for this team
   const checks = await prisma.formationCheck.findMany({
     where: {
       teamId,
@@ -35,29 +33,33 @@ export async function GET(
     orderBy: [{ stageId: "asc" }, { itemIndex: "asc" }],
   });
 
-  // Build response with full stage info
   const stageIds = stageParam !== null ? [parseInt(stageParam)] : [0, 1, 2, 3, 4, 5, 6, 7];
   
   const stages = stageIds.map((stageId) => {
     const stage = FORMATION_STAGES[stageId];
     if (!stage) return null;
-
     const itemCount = STAGE_ITEM_COUNTS[stageId] || 0;
     const stageChecks = checks.filter((c) => c.stageId === stageId);
 
     const items = stage.keyActions.map((label: string, index: number) => {
       const check = stageChecks.find((c) => c.itemIndex === index);
+      let parsedData = null;
+      if (check?.data) {
+        try { parsedData = JSON.parse(check.data); } catch { parsedData = null; }
+      }
       return {
         index,
         label,
         isCompleted: check?.isCompleted || false,
         completedBy: check?.completedBy || null,
         completedAt: check?.completedAt || null,
+        data: parsedData,
+        assignedTo: check?.assignedTo || null,
+        dueDate: check?.dueDate || null,
       };
     });
 
     const completedCount = items.filter((i) => i.isCompleted).length;
-
     return {
       stageId,
       name: stage.name,
@@ -74,7 +76,7 @@ export async function GET(
   return NextResponse.json({ stages });
 }
 
-// PUT — Toggle a checklist item
+// PUT — Toggle item and/or save data, assignment, due date
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -94,47 +96,64 @@ export async function PUT(
   }
 
   const body = await request.json();
-  const { stageId, itemIndex, isCompleted } = body;
+  const { stageId, itemIndex, isCompleted, data, assignedTo, dueDate } = body;
 
-  // Validate
   if (typeof stageId !== "number" || stageId < 0 || stageId > 7) {
     return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
   }
-
   const maxItems = STAGE_ITEM_COUNTS[stageId] || 0;
   if (typeof itemIndex !== "number" || itemIndex < 0 || itemIndex >= maxItems) {
     return NextResponse.json({ error: "Invalid item index" }, { status: 400 });
   }
 
-  // Upsert the check record
+  // Build update data
+  const updateData: Record<string, unknown> = {};
+  const createData: Record<string, unknown> = {
+    teamId,
+    stageId,
+    itemIndex,
+    isCompleted: false,
+  };
+
+  if (typeof isCompleted === "boolean") {
+    updateData.isCompleted = isCompleted;
+    updateData.completedBy = isCompleted ? user.id : null;
+    updateData.completedAt = isCompleted ? new Date() : null;
+    createData.isCompleted = isCompleted;
+    createData.completedBy = isCompleted ? user.id : null;
+    createData.completedAt = isCompleted ? new Date() : null;
+  }
+
+  if (data !== undefined) {
+    const dataStr = typeof data === "string" ? data : JSON.stringify(data);
+    updateData.data = dataStr;
+    createData.data = dataStr;
+  }
+
+  if (assignedTo !== undefined) {
+    updateData.assignedTo = assignedTo || null;
+    createData.assignedTo = assignedTo || null;
+  }
+
+  if (dueDate !== undefined) {
+    updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    createData.dueDate = dueDate ? new Date(dueDate) : null;
+  }
+
   const check = await prisma.formationCheck.upsert({
-    where: {
-      teamId_stageId_itemIndex: { teamId, stageId, itemIndex },
-    },
-    update: {
-      isCompleted,
-      completedBy: isCompleted ? user.id : null,
-      completedAt: isCompleted ? new Date() : null,
-    },
-    create: {
-      teamId,
-      stageId,
-      itemIndex,
-      isCompleted,
-      completedBy: isCompleted ? user.id : null,
-      completedAt: isCompleted ? new Date() : null,
-    },
+    where: { teamId_stageId_itemIndex: { teamId, stageId, itemIndex } },
+    update: updateData,
+    create: createData,
   });
 
-  // Return updated stage completion status
-  const allChecks = await prisma.formationCheck.findMany({
+  const allChecks = await prisma.formationCheck.count({
     where: { teamId, stageId, isCompleted: true },
   });
 
   return NextResponse.json({
     check,
-    stageComplete: allChecks.length >= maxItems,
-    completedItems: allChecks.length,
+    stageComplete: allChecks >= maxItems,
+    completedItems: allChecks,
     totalItems: maxItems,
   });
 }
