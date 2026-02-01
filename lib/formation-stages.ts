@@ -170,6 +170,25 @@ export function getStageProgress(businessStage: number): number {
   return Math.round(((businessStage + 1) / 8) * 100);
 }
 
+
+// Number of required checklist items per stage
+export const STAGE_ITEM_COUNTS: Record<number, number> = {
+  0: 4,  // Ideation
+  1: 5,  // Team Formation
+  2: 5,  // Market Validation
+  3: 5,  // Business Planning
+  4: 5,  // Legal Formation
+  5: 5,  // Financial Setup
+  6: 6,  // Compliance
+  7: 6,  // Launch Ready
+};
+
+// Get checklist items for a specific stage (labels only)
+export function getStageChecklist(stageId: number): string[] {
+  const stage = FORMATION_STAGES[stageId];
+  return stage ? stage.keyActions : [];
+}
+
 // ── State-specific Secretary of State links ──
 export const STATE_SOS_LINKS: Record<string, { name: string; sosUrl: string; llcUrl: string }> = {
   AL: { name: "Alabama", sosUrl: "https://www.sos.alabama.gov/business-entities", llcUrl: "https://www.sos.alabama.gov/business-entities/llc" },

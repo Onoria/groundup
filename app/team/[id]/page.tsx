@@ -60,6 +60,26 @@ interface MyMembership {
   equityPercent: number | null;
 }
 
+interface ChecklistItem {
+  index: number;
+  label: string;
+  isCompleted: boolean;
+  completedBy: string | null;
+  completedAt: string | null;
+}
+
+interface StageChecklist {
+  stageId: number;
+  name: string;
+  icon: string;
+  description: string;
+  totalItems: number;
+  completedItems: number;
+  allComplete: boolean;
+  items: ChecklistItem[];
+  resources: { label: string; url: string }[];
+}
+
 interface ChatMessage {
   id: string;
   content: string;
@@ -73,16 +93,16 @@ interface ChatMessage {
   };
 }
 
-// ── Stage Definitions ────────────────────────
+// ── Constants ────────────────────────────────
 const STAGES = [
-  { id: 0, name: "Ideation", icon: "💡", short: "Define concept" },
-  { id: 1, name: "Team Formation", icon: "👥", short: "Assemble team" },
-  { id: 2, name: "Market Validation", icon: "🔍", short: "Validate demand" },
-  { id: 3, name: "Business Planning", icon: "📋", short: "Write plan" },
-  { id: 4, name: "Legal Formation", icon: "⚖️", short: "Register entity" },
-  { id: 5, name: "Financial Setup", icon: "🏦", short: "EIN & bank" },
-  { id: 6, name: "Compliance", icon: "📑", short: "Licenses & permits" },
-  { id: 7, name: "Launch Ready", icon: "🚀", short: "Go to market" },
+  { id: 0, name: "Ideation", icon: "💡" },
+  { id: 1, name: "Team Formation", icon: "👥" },
+  { id: 2, name: "Market Validation", icon: "🔍" },
+  { id: 3, name: "Business Planning", icon: "📋" },
+  { id: 4, name: "Legal Formation", icon: "⚖️" },
+  { id: 5, name: "Financial Setup", icon: "🏦" },
+  { id: 6, name: "Compliance", icon: "📑" },
+  { id: 7, name: "Launch Ready", icon: "🚀" },
 ];
 
 const TITLES = [
@@ -102,6 +122,11 @@ export default function TeamDetailPage() {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [activeTab, setActiveTab] = useState<"overview" | "chat" | "milestones">("overview");
+
+  // Checklist state
+  const [checklists, setChecklists] = useState<StageChecklist[]>([]);
+  const [checklistLoading, setChecklistLoading] = useState(false);
+  const [expandedStage, setExpandedStage] = useState<number | null>(null);
 
   // Business profile editing
   const [editingBiz, setEditingBiz] = useState(false);
@@ -135,11 +160,10 @@ export default function TeamDetailPage() {
   // Actions
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
-  const [confirmStage, setConfirmStage] = useState<number | null>(null);
 
   const flash = (msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(""), 3000);
+    setTimeout(() => setToast(""), 4000);
   };
 
   // ── Fetch Team ─────────────────────────────
@@ -162,6 +186,23 @@ export default function TeamDetailPage() {
   }, [teamId]);
 
   useEffect(() => { fetchTeam(); }, [fetchTeam]);
+
+  // ── Fetch Checklists ───────────────────────
+  const fetchChecklists = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/team/${teamId}/checklist`);
+      const data = await res.json();
+      if (data.stages) setChecklists(data.stages);
+    } catch { /* ignore */ }
+  }, [teamId]);
+
+  useEffect(() => {
+    if (team) {
+      fetchChecklists();
+      // Auto-expand current stage
+      setExpandedStage(team.businessStage);
+    }
+  }, [team, fetchChecklists]);
 
   // ── Chat Polling ───────────────────────────
   const fetchMessages = useCallback(async () => {
@@ -206,7 +247,68 @@ export default function TeamDetailPage() {
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   }
 
+  function getStageChecklist(stageId: number): StageChecklist | undefined {
+    return checklists.find((c) => c.stageId === stageId);
+  }
+
   // ── Actions ────────────────────────────────
+  async function toggleCheckItem(stageId: number, itemIndex: number, isCompleted: boolean) {
+    setChecklistLoading(true);
+    try {
+      const res = await fetch(`/api/team/${teamId}/checklist`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stageId, itemIndex, isCompleted }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        flash(data.error);
+      } else {
+        // Optimistic update
+        setChecklists((prev) =>
+          prev.map((cl) => {
+            if (cl.stageId !== stageId) return cl;
+            const newItems = cl.items.map((item) =>
+              item.index === itemIndex ? { ...item, isCompleted } : item
+            );
+            const completedCount = newItems.filter((i) => i.isCompleted).length;
+            return {
+              ...cl,
+              items: newItems,
+              completedItems: completedCount,
+              allComplete: completedCount >= cl.totalItems,
+            };
+          })
+        );
+      }
+    } catch { flash("Failed to update"); }
+    setChecklistLoading(false);
+  }
+
+  async function advanceStage() {
+    if (!team) return;
+    const nextStage = team.businessStage + 1;
+    if (nextStage > 7) return;
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/team/${teamId}/stage`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: nextStage }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        flash(data.error);
+      } else {
+        flash(`Advanced to ${STAGES[nextStage].name}!`);
+        await fetchTeam();
+        await fetchChecklists();
+      }
+    } catch { flash("Failed to advance"); }
+    setActionLoading(false);
+  }
+
   async function saveBusiness() {
     setActionLoading(true);
     try {
@@ -222,21 +324,6 @@ export default function TeamDetailPage() {
       flash("Business profile updated");
       await fetchTeam();
     } catch { flash("Failed to save"); }
-    setActionLoading(false);
-  }
-
-  async function advanceStage(stageId: number) {
-    setActionLoading(true);
-    try {
-      await fetch(`/api/team/${teamId}/stage`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: stageId }),
-      });
-      setConfirmStage(null);
-      flash(`Advanced to ${STAGES[stageId].name}!`);
-      await fetchTeam();
-    } catch { flash("Failed to advance"); }
     setActionLoading(false);
   }
 
@@ -318,7 +405,7 @@ export default function TeamDetailPage() {
       setShowMsForm(false); setMsTitle(""); setMsDesc(""); setMsDue("");
       flash("Milestone added");
       await fetchTeam();
-    } catch { flash("Failed to add milestone"); }
+    } catch { flash("Failed to add"); }
     setActionLoading(false);
   }
 
@@ -340,6 +427,8 @@ export default function TeamDetailPage() {
   const daysLeft = getDaysLeft();
   const activeMembers = team.members.filter((m) => m.status !== "left");
   const completedMs = team.milestones.filter((m) => m.isCompleted).length;
+  const currentChecklist = getStageChecklist(team.businessStage);
+  const canAdvance = currentChecklist?.allComplete && team.businessStage < 7;
 
   return (
     <div className="team-container">
@@ -356,7 +445,7 @@ export default function TeamDetailPage() {
       {toast && <div className="team-toast">{toast}</div>}
 
       <main className="team-main">
-        {/* ── Team Info + Stage Badge ───────── */}
+        {/* ── Team Header ──────────────────── */}
         <section className="team-info-section">
           <div className="team-info-top">
             <div>
@@ -368,7 +457,6 @@ export default function TeamDetailPage() {
               {team.stage === "trial" ? "Trial Period" : team.stage === "committed" ? "Committed" : team.stage === "incorporated" ? "Incorporated" : team.stage === "dissolved" ? "Dissolved" : "Forming"}
             </span>
           </div>
-
           {team.stage === "trial" && daysLeft !== null && (
             <div className="team-trial-bar">
               <div className="team-trial-info">
@@ -382,51 +470,59 @@ export default function TeamDetailPage() {
           )}
         </section>
 
-        {/* ── Tab Navigation ───────────────── */}
+        {/* ── Tabs ─────────────────────────── */}
         <div className="team-tabs">
-          <button className={`team-tab ${activeTab === "overview" ? "team-tab-active" : ""}`} onClick={() => setActiveTab("overview")}>
-            Overview
-          </button>
-          <button className={`team-tab ${activeTab === "chat" ? "team-tab-active" : ""}`} onClick={() => setActiveTab("chat")}>
-            Team Chat
-          </button>
+          <button className={`team-tab ${activeTab === "overview" ? "team-tab-active" : ""}`} onClick={() => setActiveTab("overview")}>Overview</button>
+          <button className={`team-tab ${activeTab === "chat" ? "team-tab-active" : ""}`} onClick={() => setActiveTab("chat")}>Team Chat</button>
           <button className={`team-tab ${activeTab === "milestones" ? "team-tab-active" : ""}`} onClick={() => setActiveTab("milestones")}>
             Milestones {team.milestones.length > 0 && <span className="team-tab-count">{completedMs}/{team.milestones.length}</span>}
           </button>
         </div>
 
         {/* ═══════════════════════════════════ */}
-        {/* OVERVIEW TAB                        */}
+        {/*  OVERVIEW TAB                       */}
         {/* ═══════════════════════════════════ */}
         {activeTab === "overview" && (
           <>
-            {/* ── Formation Journey Timeline ── */}
+            {/* ── Formation Journey ────────── */}
             <section className="team-section">
               <div className="team-section-header">
                 <h3 className="team-section-title">Formation Journey</h3>
-                <a href="/resources" className="team-res-link">View Resources →</a>
+                <a href="/resources" className="team-res-link">View Full Resources →</a>
               </div>
+
+              {/* Timeline dots */}
               <div className="fj-timeline">
                 {STAGES.map((s) => {
                   const isComplete = s.id < team.businessStage;
                   const isCurrent = s.id === team.businessStage;
                   const isFuture = s.id > team.businessStage;
+                  const cl = getStageChecklist(s.id);
+                  const progress = cl ? `${cl.completedItems}/${cl.totalItems}` : "";
+
                   return (
                     <div
                       key={s.id}
                       className={`fj-stage ${isComplete ? "fj-complete" : ""} ${isCurrent ? "fj-current" : ""} ${isFuture ? "fj-future" : ""}`}
                       onClick={() => {
-                        if (isCurrent || isComplete) return;
-                        if (s.id === team.businessStage + 1) setConfirmStage(s.id);
+                        if (isComplete || isCurrent) {
+                          setExpandedStage(expandedStage === s.id ? null : s.id);
+                        }
                       }}
-                      title={isFuture && s.id === team.businessStage + 1 ? "Click to advance" : s.name}
+                      style={{ cursor: isComplete || isCurrent ? "pointer" : "default" }}
                     >
                       <div className="fj-dot">
                         {isComplete ? <span>✓</span> : <span>{s.icon}</span>}
                       </div>
                       <div className="fj-label">{s.name}</div>
-                      {isCurrent && <div className="fj-current-tag">Current</div>}
-                      {/* Connector line */}
+                      {isCurrent && (
+                        <div className="fj-progress-badge">
+                          {progress}
+                        </div>
+                      )}
+                      {isComplete && (
+                        <div className="fj-done-badge">Done</div>
+                      )}
                       {s.id < 7 && (
                         <div className={`fj-line ${isComplete ? "fj-line-done" : ""}`} />
                       )}
@@ -435,29 +531,110 @@ export default function TeamDetailPage() {
                 })}
               </div>
 
-              {/* Stage advance confirmation */}
-              {confirmStage !== null && (
-                <div className="fj-confirm">
-                  <p>Advance to <strong>{STAGES[confirmStage].name}</strong>?</p>
-                  <div className="fj-confirm-actions">
-                    <button className="team-btn-sm team-btn-save" onClick={() => advanceStage(confirmStage)} disabled={actionLoading}>
-                      {actionLoading ? "..." : "Yes, Advance"}
-                    </button>
-                    <button className="team-btn-sm team-btn-cancel" onClick={() => setConfirmStage(null)}>Cancel</button>
+              {/* Expanded checklist for selected stage */}
+              {expandedStage !== null && (() => {
+                const cl = getStageChecklist(expandedStage);
+                if (!cl) return null;
+                const isCurrentStage = expandedStage === team.businessStage;
+                const isPastStage = expandedStage < team.businessStage;
+
+                return (
+                  <div className="fj-checklist-panel">
+                    <div className="fj-checklist-header">
+                      <div>
+                        <span className="fj-checklist-icon">{cl.icon}</span>
+                        <span className="fj-checklist-name">{cl.name}</span>
+                        {isPastStage && <span className="fj-checklist-complete-badge">Completed ✓</span>}
+                      </div>
+                      <span className={`fj-checklist-counter ${cl.allComplete ? "fj-counter-done" : ""}`}>
+                        {cl.completedItems}/{cl.totalItems}
+                      </span>
+                    </div>
+
+                    <p className="fj-checklist-desc">{cl.description}</p>
+
+                    {/* Progress bar */}
+                    <div className="fj-progress-bar">
+                      <div
+                        className="fj-progress-fill"
+                        style={{ width: `${cl.totalItems > 0 ? (cl.completedItems / cl.totalItems) * 100 : 0}%` }}
+                      />
+                    </div>
+
+                    {/* Checklist items */}
+                    <div className="fj-items">
+                      {cl.items.map((item) => (
+                        <label
+                          key={item.index}
+                          className={`fj-item ${item.isCompleted ? "fj-item-done" : ""} ${!isCurrentStage && !isPastStage ? "fj-item-locked" : ""}`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="fj-item-check"
+                            checked={item.isCompleted}
+                            disabled={checklistLoading || (!isCurrentStage && !isPastStage)}
+                            onChange={(e) => toggleCheckItem(cl.stageId, item.index, e.target.checked)}
+                          />
+                          <span className="fj-item-label">{item.label}</span>
+                          {item.isCompleted && item.completedAt && (
+                            <span className="fj-item-date">
+                              {new Date(item.completedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </label>
+                      ))}
+                    </div>
+
+                    {/* Resources for this stage */}
+                    {cl.resources && cl.resources.length > 0 && (
+                      <div className="fj-resources">
+                        <span className="fj-resources-label">Helpful Resources:</span>
+                        {cl.resources.map((r, i) => (
+                          <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="fj-resource-link">
+                            {r.label} ↗
+                          </a>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Advance button (only on current stage) */}
+                    {isCurrentStage && team.businessStage < 7 && (
+                      <div className="fj-advance-section">
+                        {canAdvance ? (
+                          <button
+                            className="fj-advance-btn fj-advance-ready"
+                            onClick={advanceStage}
+                            disabled={actionLoading}
+                          >
+                            {actionLoading ? "Advancing..." : `Advance to ${STAGES[team.businessStage + 1].name} →`}
+                          </button>
+                        ) : (
+                          <div className="fj-advance-locked">
+                            <span className="fj-lock-icon">🔒</span>
+                            <span>Complete all {cl.totalItems} items above to unlock the next stage</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {isCurrentStage && team.businessStage === 7 && cl.allComplete && (
+                      <div className="fj-advance-section">
+                        <div className="fj-launch-msg">
+                          <span>🎉</span> All formation stages complete — your business is launch ready!
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </section>
 
             {/* ── Business Profile ─────────── */}
             <section className="team-section">
               <div className="team-section-header">
                 <h3 className="team-section-title">Business Profile</h3>
-                {!editingBiz && (
-                  <button className="team-edit-link" onClick={() => setEditingBiz(true)}>Edit</button>
-                )}
+                {!editingBiz && <button className="team-edit-link" onClick={() => setEditingBiz(true)}>Edit</button>}
               </div>
-
               {editingBiz ? (
                 <div className="biz-form">
                   <div className="biz-field">
@@ -475,7 +652,7 @@ export default function TeamDetailPage() {
                     </div>
                     <div className="biz-field">
                       <label className="biz-label">Industry</label>
-                      <input className="biz-input" value={bizIndustry} onChange={(e) => setBizIndustry(e.target.value)} placeholder="e.g. SaaS, Construction, Healthcare" />
+                      <input className="biz-input" value={bizIndustry} onChange={(e) => setBizIndustry(e.target.value)} placeholder="e.g. SaaS, Construction" />
                     </div>
                   </div>
                   <div className="biz-actions">
@@ -498,18 +675,8 @@ export default function TeamDetailPage() {
                         </div>
                       )}
                       <div className="biz-row-display">
-                        {team.targetMarket && (
-                          <div className="biz-item">
-                            <span className="biz-item-label">Target Market</span>
-                            <p className="biz-item-value">{team.targetMarket}</p>
-                          </div>
-                        )}
-                        {team.industry && (
-                          <div className="biz-item">
-                            <span className="biz-item-label">Industry</span>
-                            <p className="biz-item-value">{team.industry}</p>
-                          </div>
-                        )}
+                        {team.targetMarket && <div className="biz-item"><span className="biz-item-label">Target Market</span><p className="biz-item-value">{team.targetMarket}</p></div>}
+                        {team.industry && <div className="biz-item"><span className="biz-item-label">Industry</span><p className="biz-item-value">{team.industry}</p></div>}
                       </div>
                     </>
                   ) : (
@@ -619,15 +786,11 @@ export default function TeamDetailPage() {
                 </div>
               </section>
             )}
-
             {team.stage === "committed" && (
               <section className="team-section team-committed-section">
                 <div className="team-committed-msg">
                   <span className="team-committed-icon">✅</span>
-                  <div>
-                    <p className="team-committed-title">Team is Official!</p>
-                    <p className="team-committed-sub">All members have committed. Time to execute your plan.</p>
-                  </div>
+                  <div><p className="team-committed-title">Team is Official!</p><p className="team-committed-sub">All members committed. Time to execute.</p></div>
                 </div>
               </section>
             )}
@@ -635,16 +798,13 @@ export default function TeamDetailPage() {
         )}
 
         {/* ═══════════════════════════════════ */}
-        {/* CHAT TAB                            */}
+        {/*  CHAT TAB                           */}
         {/* ═══════════════════════════════════ */}
         {activeTab === "chat" && (
           <section className="team-section chat-section">
             <div className="chat-messages">
               {messages.length === 0 && (
-                <div className="chat-empty">
-                  <span className="chat-empty-icon">💬</span>
-                  <p>No messages yet. Start the conversation!</p>
-                </div>
+                <div className="chat-empty"><span className="chat-empty-icon">💬</span><p>No messages yet. Start the conversation!</p></div>
               )}
               {messages.map((msg, i) => {
                 const isMe = msg.sender.id === currentUserId;
@@ -659,9 +819,7 @@ export default function TeamDetailPage() {
                     <div className="chat-msg-body">
                       {!isMe && showAvatar && <span className="chat-msg-name">{getSenderName(msg.sender)}</span>}
                       <div className="chat-bubble">{msg.content}</div>
-                      <span className="chat-msg-time">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
+                      <span className="chat-msg-time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
                   </div>
                 );
@@ -669,23 +827,14 @@ export default function TeamDetailPage() {
               <div ref={chatEndRef} />
             </div>
             <div className="chat-input-bar">
-              <input
-                className="chat-input"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                placeholder="Type a message..."
-                maxLength={2000}
-              />
-              <button className="chat-send-btn" onClick={sendMessage} disabled={sending || !chatInput.trim()}>
-                {sending ? "..." : "Send"}
-              </button>
+              <input className="chat-input" value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()} placeholder="Type a message..." maxLength={2000} />
+              <button className="chat-send-btn" onClick={sendMessage} disabled={sending || !chatInput.trim()}>{sending ? "..." : "Send"}</button>
             </div>
           </section>
         )}
 
         {/* ═══════════════════════════════════ */}
-        {/* MILESTONES TAB                      */}
+        {/*  MILESTONES TAB                     */}
         {/* ═══════════════════════════════════ */}
         {activeTab === "milestones" && (
           <section className="team-section">
@@ -693,7 +842,6 @@ export default function TeamDetailPage() {
               <h3 className="team-section-title">Team Milestones</h3>
               {!showMsForm && <button className="team-add-btn" onClick={() => setShowMsForm(true)}>+ Add Milestone</button>}
             </div>
-
             {showMsForm && (
               <div className="team-ms-form">
                 <input className="team-ms-input" placeholder="Milestone title..." value={msTitle} onChange={(e) => setMsTitle(e.target.value)} />
@@ -705,17 +853,11 @@ export default function TeamDetailPage() {
                 </div>
               </div>
             )}
-
-            {team.milestones.length === 0 && !showMsForm && (
-              <p className="team-empty-hint">No milestones yet. Add your first goal to track progress.</p>
-            )}
-
+            {team.milestones.length === 0 && !showMsForm && <p className="team-empty-hint">No milestones yet. Add your first goal.</p>}
             <div className="team-ms-list">
               {team.milestones.map((ms) => (
                 <div key={ms.id} className={`team-ms-item ${ms.isCompleted ? "team-ms-done" : ""}`}>
-                  <button className="team-ms-check" onClick={() => toggleMilestone(ms.id, !ms.isCompleted)}>
-                    {ms.isCompleted ? "✓" : ""}
-                  </button>
+                  <button className="team-ms-check" onClick={() => toggleMilestone(ms.id, !ms.isCompleted)}>{ms.isCompleted ? "✓" : ""}</button>
                   <div className="team-ms-content">
                     <span className="team-ms-title">{ms.title}</span>
                     {ms.description && <span className="team-ms-desc">{ms.description}</span>}
