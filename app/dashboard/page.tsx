@@ -22,6 +22,7 @@ export default async function DashboardPage() {
       },
       workingStyle: {
         select: {
+      track: true,
           confidence: true,
           sessionsCount: true,
           nextRefreshAt: true,
