@@ -22,7 +22,6 @@ export default async function DashboardPage() {
       },
       workingStyle: {
         select: {
-      track: true,
           confidence: true,
           sessionsCount: true,
           nextRefreshAt: true,
@@ -41,6 +40,16 @@ export default async function DashboardPage() {
 
   if (!user) {
     redirect('/onboarding');
+  }
+
+  // US Citizenship gate
+  if (!user.usCitizenAttested) {
+    redirect('/citizenship');
+  }
+
+  // Track selection gate
+  if (!user.track) {
+    redirect('/select-track');
   }
 
   const profileCompletion = calculateProfileCompletion(user);
