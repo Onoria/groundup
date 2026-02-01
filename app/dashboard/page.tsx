@@ -2,6 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { UserButton } from '@clerk/nextjs';
+import NotificationBell from "@/components/NotificationBell";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
