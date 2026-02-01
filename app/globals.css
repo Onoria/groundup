@@ -2498,3 +2498,344 @@
     width: 100%;
   }
 }
+
+/* ========================================
+   SKILL XP & CREDENTIALS (Profile)
+   ======================================== */
+
+.xp-section {
+  border-color: rgba(168, 85, 247, 0.2) !important;
+}
+
+.xp-total-badge {
+  padding: 4px 14px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(236, 72, 153, 0.12));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 20px;
+  color: #c084fc;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skill XP bars */
+.xp-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.xp-skill-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.xp-skill-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.xp-skill-icon {
+  font-size: 1.1rem;
+}
+
+.xp-skill-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.xp-level-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: rgba(168, 85, 247, 0.1);
+  border-radius: 8px;
+  color: #c084fc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.xp-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.xp-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(100, 116, 139, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #a855f7, #ec4899);
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.xp-bar-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  min-width: 80px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Credential list */
+.xp-cred-list {
+  margin-bottom: 16px;
+}
+
+.xp-cred-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.xp-cred-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  transition: background 0.2s;
+}
+
+.xp-cred-item:hover {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.xp-cred-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.xp-cred-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.xp-cred-verified {
+  color: #34d399;
+}
+
+.xp-verified-check {
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-cred-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.xp-cred-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.xp-cred-xp {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #c084fc;
+}
+
+.xp-cred-remove {
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.xp-cred-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+/* Add credential button */
+.xp-add-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
+  border-radius: 10px;
+  color: #c084fc;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.xp-add-btn:hover {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+/* Credential form */
+.xp-form {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.xp-form-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.xp-form-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+.xp-form-label:first-of-type {
+  margin-top: 0;
+}
+
+.xp-form-input,
+.xp-form-select {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 8px;
+  color: #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.xp-form-select {
+  appearance: auto;
+}
+
+.xp-form-input:focus,
+.xp-form-select:focus {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
+}
+
+.xp-form-input::placeholder {
+  color: #475569;
+}
+
+.xp-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.xp-form-submit {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.xp-form-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(168, 85, 247, 0.4);
+}
+
+.xp-form-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.xp-form-cancel {
+  padding: 12px 20px;
+  background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.xp-form-cancel:hover {
+  background: rgba(100, 116, 139, 0.2);
+}
+
+/* Match card XP badges */
+.match-xp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #c084fc;
+  margin-left: 4px;
+}
+
+@media (max-width: 768px) {
+  .xp-skill-info {
+    flex-wrap: wrap;
+  }
+
+  .xp-cred-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .xp-cred-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .xp-form-actions {
+    flex-direction: column;
+  }
+}

@@ -81,6 +81,7 @@ model User {
   receivedMessages  Message[]      @relation("ReceivedMessages")
   auditLogs         AuditLog[]
   verifications     Verification[]
+  credentials       UserCredential[]
   notifications     Notification[]
   assessmentSessions AssessmentSession[]
   workingStyle       UserWorkingStyle?
@@ -125,6 +126,10 @@ model UserSkill {
   proficiency     String    // "beginner" | "intermediate" | "advanced" | "expert"
   yearsExperience Int?
   
+  // XP & Level
+  xp              Int       @default(0)
+  level           Int       @default(1) // 1=Novice, 2=Apprentice, 3=Journeyman, 4=Expert, 5=Master, 6=Grandmaster
+  
   // Verification status
   isVerified      Boolean   @default(false)
   verifiedAt      DateTime?
@@ -136,6 +141,8 @@ model UserSkill {
   
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   skill           Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  
+  credentials     UserCredential[]
   
   @@unique([userId, skillId])
   @@index([userId])
@@ -552,4 +559,79 @@ model UserWorkingStyle {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_working_styles")
+}
+
+// ==========================================
+// CREDENTIAL & XP SYSTEM
+// ==========================================
+
+model Credential {
+  id              String    @id @default(cuid())
+  name            String    @unique // "PMP", "AWS Solutions Architect", "MBA", etc.
+  shortName       String?   // "PMP", "AWS-SA", etc.
+  category        String    // "certification" | "education" | "license" | "bootcamp"
+  issuer          String?   // "PMI", "Amazon", "Harvard", etc.
+  
+  // XP configuration
+  baseXp          Int       // XP when verified
+  unverifiedXp    Int       // XP when self-reported (lower)
+  
+  // Skill mapping
+  skillCategory   String    // Maps to Skill.category: "technical" | "business" | "creative" | "operations"
+  skillKeywords   String[]  // Keywords to match against skill names, e.g. ["project management", "agile"]
+  
+  // Metadata
+  description     String?   @db.Text
+  verifyUrl       String?   // URL where credential can be looked up
+  isActive        Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  userCredentials UserCredential[]
+  
+  @@index([category])
+  @@index([skillCategory])
+  @@map("credentials")
+}
+
+model UserCredential {
+  id              String    @id @default(cuid())
+  userId          String
+  userSkillId     String?   // Links to specific UserSkill for XP
+  credentialId    String?   // From catalog (null if custom)
+  
+  // Credential details
+  name            String    // Display name
+  category        String    // "certification" | "education" | "license" | "bootcamp" | "reference" | "portfolio"
+  issuer          String?
+  
+  // Dates
+  dateEarned      DateTime?
+  expiresAt       DateTime?
+  
+  // Proof
+  proofUrl        String?   // Link to certificate, badge, etc.
+  proofNotes      String?   @db.Text
+  
+  // Verification
+  isVerified      Boolean   @default(false)
+  verifiedAt      DateTime?
+  verifiedBy      String?   // Admin who verified
+  
+  // XP
+  xpAwarded       Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userSkill       UserSkill? @relation(fields: [userSkillId], references: [id], onDelete: SetNull)
+  credential      Credential? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([userSkillId])
+  @@index([credentialId])
+  @@index([isVerified])
+  @@map("user_credentials")
 }

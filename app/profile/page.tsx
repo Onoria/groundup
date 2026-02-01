@@ -160,6 +160,13 @@ export default function ProfilePage() {
   });
   const [verifyingSkillId, setVerifyingSkillId] = useState<string | null>(null);
   const [proofUrl, setProofUrl] = useState("");
+  const [skillXpData, setSkillXpData] = useState<any[]>([]);
+  const [totalXp, setTotalXp] = useState(0);
+  const [credentialCatalog, setCredentialCatalog] = useState<any[]>([]);
+  const [userCredentials, setUserCredentials] = useState<any[]>([]);
+  const [showCredForm, setShowCredForm] = useState(false);
+  const [credForm, setCredForm] = useState({ credentialId: "", customName: "", category: "certification", issuer: "", dateEarned: "", proofUrl: "", userSkillId: "" });
+  const [credLoading, setCredLoading] = useState(false);
 
   /* ── Fetch profile ───────────────────────── */
   const fetchProfile = useCallback(async () => {
@@ -180,6 +187,23 @@ export default function ProfilePage() {
     if (isLoaded && !clerkUser) { router.push("/"); return; }
     if (isLoaded && clerkUser) fetchProfile();
   }, [isLoaded, clerkUser, router, fetchProfile]);
+
+  useEffect(() => {
+    fetch("/api/credentials")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setSkillXpData(data.skillXp || []);
+          setTotalXp(data.totalXp || 0);
+          setUserCredentials(data.credentials || []);
+        }
+      }).catch(() => {});
+    fetch("/api/credentials?catalog=true")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setCredentialCatalog(data.catalog || []);
+      }).catch(() => {});
+  }, []);
 
   function populateForms(u: UserProfile) {
     setBasicForm({
@@ -372,6 +396,37 @@ export default function ProfilePage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     });
+  }
+
+
+  async function addCredential() {
+    setCredLoading(true);
+    try {
+      const res = await fetch("/api/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credForm),
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setShowCredForm(false);
+        setCredForm({ credentialId: "", customName: "", category: "certification", issuer: "", dateEarned: "", proofUrl: "", userSkillId: "" });
+        // Refresh XP data
+        const refresh = await fetch("/api/credentials").then((r) => r.json());
+        setSkillXpData(refresh.skillXp || []);
+        setTotalXp(refresh.totalXp || 0);
+        setUserCredentials(refresh.credentials || []);
+      }
+    } catch {}
+    setCredLoading(false);
+  }
+
+  async function removeCredential(id: string) {
+    await fetch(`/api/credentials?id=${id}`, { method: "DELETE" });
+    const refresh = await fetch("/api/credentials").then((r) => r.json());
+    setSkillXpData(refresh.skillXp || []);
+    setTotalXp(refresh.totalXp || 0);
+    setUserCredentials(refresh.credentials || []);
   }
 
 
@@ -752,7 +807,154 @@ export default function ProfilePage() {
           </section>
         )}
 
-        {/* ── Preferences Section ──────────── */}
+        
+        {/* ── Experience & Credentials Section ── */}
+        <section className="profile-section xp-section">
+          <div className="profile-section-header">
+            <h2 className="profile-section-title">Experience & Credentials</h2>
+            <span className="xp-total-badge">⚡ {totalXp} Total XP</span>
+          </div>
+
+          {/* Skill XP bars */}
+          {skillXpData.length > 0 && (
+            <div className="xp-skill-list">
+              {skillXpData.map((s: any) => {
+                const XP_LEVELS = [
+                  { level: 1, minXp: 0 }, { level: 2, minXp: 25 },
+                  { level: 3, minXp: 75 }, { level: 4, minXp: 150 },
+                  { level: 5, minXp: 300 }, { level: 6, minXp: 500 },
+                ];
+                const currentIdx = XP_LEVELS.findIndex((l) => l.level === s.level);
+                const nextLevel = currentIdx < XP_LEVELS.length - 1 ? XP_LEVELS[currentIdx + 1] : null;
+                const currentMin = XP_LEVELS[currentIdx]?.minXp || 0;
+                const range = nextLevel ? nextLevel.minXp - currentMin : 1;
+                const progress = nextLevel ? Math.round(((s.xp - currentMin) / range) * 100) : 100;
+
+                return (
+                  <div key={s.userSkillId} className="xp-skill-row">
+                    <div className="xp-skill-info">
+                      <span className="xp-skill-icon">{s.levelIcon}</span>
+                      <span className="xp-skill-name">{s.skillName}</span>
+                      <span className="xp-level-name">{s.levelName}</span>
+                    </div>
+                    <div className="xp-bar-wrap">
+                      <div className="xp-bar">
+                        <div className="xp-bar-fill" style={{ width: `${progress}%` }} />
+                      </div>
+                      <span className="xp-bar-label">
+                        {s.xp} XP {nextLevel ? `/ ${nextLevel.minXp}` : "(MAX)"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* User credentials list */}
+          {userCredentials.length > 0 && (
+            <div className="xp-cred-list">
+              <h4 className="xp-cred-heading">Your Credentials</h4>
+              {userCredentials.map((c: any) => (
+                <div key={c.id} className="xp-cred-item">
+                  <div className="xp-cred-info">
+                    <span className={`xp-cred-name ${c.isVerified ? "xp-cred-verified" : ""}`}>
+                      {c.name}
+                      {c.isVerified && <span className="xp-verified-check">✓</span>}
+                    </span>
+                    <span className="xp-cred-meta">
+                      {c.issuer && `${c.issuer} · `}{c.category}
+                      {c.dateEarned && ` · ${new Date(c.dateEarned).getFullYear()}`}
+                    </span>
+                  </div>
+                  <div className="xp-cred-right">
+                    <span className="xp-cred-xp">+{c.xpAwarded} XP</span>
+                    <button className="xp-cred-remove" onClick={() => removeCredential(c.id)}>✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add credential form */}
+          {!showCredForm ? (
+            <button className="xp-add-btn" onClick={() => setShowCredForm(true)}>
+              + Add Credential
+            </button>
+          ) : (
+            <div className="xp-form">
+              <h4 className="xp-form-title">Add a Credential</h4>
+
+              <label className="xp-form-label">From catalog (optional)</label>
+              <select
+                className="xp-form-select"
+                value={credForm.credentialId}
+                onChange={(e) => {
+                  const sel = credentialCatalog.find((c: any) => c.id === e.target.value);
+                  setCredForm((f) => ({
+                    ...f,
+                    credentialId: e.target.value,
+                    customName: sel?.name || f.customName,
+                    category: sel?.category || f.category,
+                    issuer: sel?.issuer || f.issuer,
+                  }));
+                }}
+              >
+                <option value="">— Select or enter custom below —</option>
+                {credentialCatalog.map((c: any) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.category}) — {c.unverifiedXp} XP
+                  </option>
+                ))}
+              </select>
+
+              {!credForm.credentialId && (
+                <>
+                  <label className="xp-form-label">Credential name</label>
+                  <input className="xp-form-input" placeholder="e.g. Google Analytics Certificate" value={credForm.customName} onChange={(e) => setCredForm((f) => ({ ...f, customName: e.target.value }))} />
+
+                  <label className="xp-form-label">Type</label>
+                  <select className="xp-form-select" value={credForm.category} onChange={(e) => setCredForm((f) => ({ ...f, category: e.target.value }))}>
+                    <option value="certification">Certification</option>
+                    <option value="education">Education / Degree</option>
+                    <option value="license">Professional License</option>
+                    <option value="bootcamp">Bootcamp</option>
+                    <option value="reference">Reference</option>
+                    <option value="portfolio">Portfolio / Project</option>
+                  </select>
+
+                  <label className="xp-form-label">Issuer</label>
+                  <input className="xp-form-input" placeholder="e.g. Google, MIT, etc." value={credForm.issuer} onChange={(e) => setCredForm((f) => ({ ...f, issuer: e.target.value }))} />
+                </>
+              )}
+
+              <label className="xp-form-label">Link to which skill?</label>
+              <select className="xp-form-select" value={credForm.userSkillId} onChange={(e) => setCredForm((f) => ({ ...f, userSkillId: e.target.value }))}>
+                <option value="">— Select a skill —</option>
+                {skillXpData.map((s: any) => (
+                  <option key={s.userSkillId} value={s.userSkillId}>
+                    {s.skillName}
+                  </option>
+                ))}
+              </select>
+
+              <label className="xp-form-label">Date earned</label>
+              <input className="xp-form-input" type="date" value={credForm.dateEarned} onChange={(e) => setCredForm((f) => ({ ...f, dateEarned: e.target.value }))} />
+
+              <label className="xp-form-label">Proof link (optional)</label>
+              <input className="xp-form-input" placeholder="https://..." value={credForm.proofUrl} onChange={(e) => setCredForm((f) => ({ ...f, proofUrl: e.target.value }))} />
+
+              <div className="xp-form-actions">
+                <button className="xp-form-submit" onClick={addCredential} disabled={credLoading}>
+                  {credLoading ? "Adding..." : "Add Credential"}
+                </button>
+                <button className="xp-form-cancel" onClick={() => setShowCredForm(false)}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </section>
+
+{/* ── Preferences Section ──────────── */}
         <section className="profile-section">
           <div className="profile-section-header">
             <h2 className="profile-section-title">Preferences</h2>
