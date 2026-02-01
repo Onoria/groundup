@@ -7451,3 +7451,14 @@
   .exp-field-row { grid-template-columns: 1fr; }
   .exp-controls { flex-direction: column; gap: 8px; }
 }
+
+.stat-clickable {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}

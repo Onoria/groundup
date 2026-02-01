@@ -118,29 +118,29 @@ export default async function DashboardPage() {
 
         {/* Stats Grid */}
         <section className="dashboard-stats">
-          <div className="stat-card stat-primary">
+          <a href="/profile" className="stat-card stat-primary stat-clickable">
             <div className="stat-icon">🎯</div>
             <div className="stat-content">
               <div className="stat-value">{skillCount}</div>
               <div className="stat-label">Skills Listed</div>
             </div>
-          </div>
+          </a>
 
-          <div className="stat-card stat-success">
+          <a href="/team" className="stat-card stat-success stat-clickable">
             <div className="stat-icon">👥</div>
             <div className="stat-content">
               <div className="stat-value">{teamCount}</div>
               <div className="stat-label">Teams</div>
             </div>
-          </div>
+          </a>
 
-          <div className="stat-card stat-warning">
+          <a href="/match" className="stat-card stat-warning stat-clickable">
             <div className="stat-icon">⚡</div>
             <div className="stat-content">
               <div className="stat-value">{pendingMatches}</div>
               <div className="stat-label">Pending Matches</div>
             </div>
-          </div>
+          </a>
         </section>
 
         {/* Action Cards */}
@@ -169,19 +169,11 @@ export default async function DashboardPage() {
             </p>
           </a>
 
-          <a href="/resources" className="action-card action-resources">
+          <a href="/resources" className="action-card action-resource">
             <div className="action-icon">📚</div>
             <h3 className="action-title">Resources</h3>
             <p className="action-description">
-              Business formation guides
-            </p>
-          </a>
-
-          <a href="/resources" className="action-card action-resources">
-            <div className="action-icon">📚</div>
-            <h3 className="action-title">Resources</h3>
-            <p className="action-description">
-              Business formation guides
+              State filing guides & tools
             </p>
           </a>
 
