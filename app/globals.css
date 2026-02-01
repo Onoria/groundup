@@ -4654,3 +4654,146 @@
   font-size: 0.65rem;
   font-weight: 700;
 }
+
+/* ========================================
+   CITIZENSHIP ATTESTATION PAGE
+   ======================================== */
+
+.citizen-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at top center, #1e293b 0%, #020617 50%, #020617 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.citizen-card {
+  max-width: 520px;
+  width: 100%;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  border-radius: 20px;
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.citizen-flag {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+}
+
+.citizen-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #e5e7eb;
+  margin-bottom: 12px;
+}
+
+.citizen-desc {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.citizen-form {
+  text-align: left;
+}
+
+.citizen-state-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.citizen-select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 10px;
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  appearance: auto;
+}
+
+.citizen-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.citizen-checkbox-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+
+.citizen-checkbox-row:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.citizen-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #3b82f6;
+}
+
+.citizen-attest-text {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.citizen-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.citizen-submit {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.citizen-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.4);
+}
+
+.citizen-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.citizen-footer {
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.5;
+}
