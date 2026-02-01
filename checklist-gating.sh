@@ -1,3 +1,398 @@
+#!/bin/bash
+# ============================================
+# GroundUp — Phase 2.6b: Formation Checklist Gating
+# Run from: ~/groundup (AFTER team-enhancement.sh)
+# ============================================
+#
+# WHAT THIS DOES:
+# - Adds FormationCheck model to persist checklist completion per team
+# - Creates checklist API (GET status, PUT toggle items)
+# - Updates stage advancement API to REQUIRE all items complete
+# - Updates team detail page with interactive gated checklist
+# - Updates resources page checklists to sync with team progress
+# - Tracks WHO completed each item and WHEN
+#
+# Item counts per stage:
+#   0-Ideation: 4  |  1-Team Formation: 5  |  2-Market Validation: 5
+#   3-Business Planning: 5  |  4-Legal Formation: 5  |  5-Financial Setup: 5
+#   6-Compliance: 6  |  7-Launch Ready: 6
+
+set -e
+echo "Building Phase 2.6b: Formation Checklist Gating..."
+
+# ──────────────────────────────────────────────
+# 1. Schema — Add FormationCheck model
+# ──────────────────────────────────────────────
+echo "  Updating schema..."
+
+python3 << 'PYEOF'
+content = open("prisma/schema.prisma", "r").read()
+
+# Check if already added
+if "FormationCheck" in content:
+    print("  FormationCheck model already exists — skipping schema update")
+else:
+    # 1a. Add FormationCheck model at the end (before any trailing whitespace)
+    model_def = '''
+
+// ==========================================
+// FORMATION CHECKLIST (Phase 2.6b)
+// ==========================================
+
+model FormationCheck {
+  id          String    @id @default(cuid())
+  teamId      String
+  stageId     Int       // 0-7 (formation stage)
+  itemIndex   Int       // Index within stage's checklist
+  
+  isCompleted Boolean   @default(false)
+  completedBy String?   // User ID who checked it
+  completedAt DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, stageId, itemIndex])
+  @@index([teamId, stageId])
+  @@map("formation_checks")
+}
+'''
+    content = content.rstrip() + model_def
+
+    # 1b. Add relation to Team model
+    old_team_rel = '  milestones      Milestone[]'
+    new_team_rel = '''  milestones      Milestone[]
+  formationChecks FormationCheck[]'''
+
+    if old_team_rel in content and 'formationChecks' not in content:
+        content = content.replace(old_team_rel, new_team_rel, 1)
+        print("  Added formationChecks relation to Team model")
+    
+    open("prisma/schema.prisma", "w").write(content)
+    print("  Added FormationCheck model to schema")
+
+PYEOF
+
+npx prisma db push --accept-data-loss 2>&1 | tail -3
+npx prisma generate 2>&1 | tail -2
+echo "  Schema migration complete"
+
+# ──────────────────────────────────────────────
+# 2. Update lib/formation-stages.ts — Add STAGE_ITEM_COUNTS
+# ──────────────────────────────────────────────
+echo "  Updating formation-stages lib..."
+
+python3 << 'PYEOF'
+content = open("lib/formation-stages.ts", "r").read()
+
+if "STAGE_ITEM_COUNTS" not in content:
+    # Add item counts export before the STATE_SOS_LINKS
+    addition = '''
+// Number of required checklist items per stage
+export const STAGE_ITEM_COUNTS: Record<number, number> = {
+  0: 4,  // Ideation
+  1: 5,  // Team Formation
+  2: 5,  // Market Validation
+  3: 5,  // Business Planning
+  4: 5,  // Legal Formation
+  5: 5,  // Financial Setup
+  6: 6,  // Compliance
+  7: 6,  // Launch Ready
+};
+
+// Get checklist items for a specific stage (labels only)
+export function getStageChecklist(stageId: number): string[] {
+  const stage = FORMATION_STAGES[stageId];
+  return stage ? stage.keyActions : [];
+}
+
+'''
+    marker = '// ── State-specific Secretary of State links ──'
+    if marker in content:
+        content = content.replace(marker, addition + marker, 1)
+    else:
+        # Fallback: append before STATE_SOS_LINKS
+        content = content.replace('export const STATE_SOS_LINKS', addition + 'export const STATE_SOS_LINKS', 1)
+    
+    open("lib/formation-stages.ts", "w").write(content)
+    print("  Added STAGE_ITEM_COUNTS and getStageChecklist to lib")
+else:
+    print("  STAGE_ITEM_COUNTS already exists — skipping")
+PYEOF
+
+# ──────────────────────────────────────────────
+# 3. API: /api/team/[id]/checklist/route.ts
+# ──────────────────────────────────────────────
+mkdir -p "app/api/team/[id]/checklist"
+
+cat > "app/api/team/[id]/checklist/route.ts" << 'APIEOF'
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { FORMATION_STAGES, STAGE_ITEM_COUNTS } from "@/lib/formation-stages";
+
+// GET — Get checklist status for a stage (or all stages)
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id: teamId } = await params;
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // Verify membership
+  const membership = await prisma.teamMember.findFirst({
+    where: { teamId, userId: user.id, status: { not: "left" } },
+  });
+  if (!membership) {
+    return NextResponse.json({ error: "Not a team member" }, { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const stageParam = url.searchParams.get("stage");
+
+  // Fetch completed checks for this team
+  const checks = await prisma.formationCheck.findMany({
+    where: {
+      teamId,
+      ...(stageParam !== null ? { stageId: parseInt(stageParam) } : {}),
+    },
+    orderBy: [{ stageId: "asc" }, { itemIndex: "asc" }],
+  });
+
+  // Build response with full stage info
+  const stageIds = stageParam !== null ? [parseInt(stageParam)] : [0, 1, 2, 3, 4, 5, 6, 7];
+  
+  const stages = stageIds.map((stageId) => {
+    const stage = FORMATION_STAGES[stageId];
+    if (!stage) return null;
+
+    const itemCount = STAGE_ITEM_COUNTS[stageId] || 0;
+    const stageChecks = checks.filter((c) => c.stageId === stageId);
+
+    const items = stage.keyActions.map((label: string, index: number) => {
+      const check = stageChecks.find((c) => c.itemIndex === index);
+      return {
+        index,
+        label,
+        isCompleted: check?.isCompleted || false,
+        completedBy: check?.completedBy || null,
+        completedAt: check?.completedAt || null,
+      };
+    });
+
+    const completedCount = items.filter((i) => i.isCompleted).length;
+
+    return {
+      stageId,
+      name: stage.name,
+      icon: stage.icon,
+      description: stage.description,
+      totalItems: itemCount,
+      completedItems: completedCount,
+      allComplete: completedCount >= itemCount,
+      items,
+      resources: stage.resources,
+    };
+  }).filter(Boolean);
+
+  return NextResponse.json({ stages });
+}
+
+// PUT — Toggle a checklist item
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id: teamId } = await params;
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const membership = await prisma.teamMember.findFirst({
+    where: { teamId, userId: user.id, status: { not: "left" } },
+  });
+  if (!membership) {
+    return NextResponse.json({ error: "Not a team member" }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const { stageId, itemIndex, isCompleted } = body;
+
+  // Validate
+  if (typeof stageId !== "number" || stageId < 0 || stageId > 7) {
+    return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
+  }
+
+  const maxItems = STAGE_ITEM_COUNTS[stageId] || 0;
+  if (typeof itemIndex !== "number" || itemIndex < 0 || itemIndex >= maxItems) {
+    return NextResponse.json({ error: "Invalid item index" }, { status: 400 });
+  }
+
+  // Upsert the check record
+  const check = await prisma.formationCheck.upsert({
+    where: {
+      teamId_stageId_itemIndex: { teamId, stageId, itemIndex },
+    },
+    update: {
+      isCompleted,
+      completedBy: isCompleted ? user.id : null,
+      completedAt: isCompleted ? new Date() : null,
+    },
+    create: {
+      teamId,
+      stageId,
+      itemIndex,
+      isCompleted,
+      completedBy: isCompleted ? user.id : null,
+      completedAt: isCompleted ? new Date() : null,
+    },
+  });
+
+  // Return updated stage completion status
+  const allChecks = await prisma.formationCheck.findMany({
+    where: { teamId, stageId, isCompleted: true },
+  });
+
+  return NextResponse.json({
+    check,
+    stageComplete: allChecks.length >= maxItems,
+    completedItems: allChecks.length,
+    totalItems: maxItems,
+  });
+}
+APIEOF
+
+echo "  Created /api/team/[id]/checklist/route.ts"
+
+# ──────────────────────────────────────────────
+# 4. Update stage advancement API — require completion
+# ──────────────────────────────────────────────
+echo "  Updating stage advancement API..."
+
+cat > "app/api/team/[id]/stage/route.ts" << 'APIEOF'
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { STAGE_ITEM_COUNTS } from "@/lib/formation-stages";
+
+// PUT — Advance the business formation stage (requires checklist completion)
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id: teamId } = await params;
+  const user = await prisma.user.findUnique({ where: { clerkId } });
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const membership = await prisma.teamMember.findFirst({
+    where: { teamId, userId: user.id, status: { not: "left" } },
+  });
+  if (!membership) {
+    return NextResponse.json({ error: "Not a team member" }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const { stage } = body;
+
+  if (typeof stage !== "number" || stage < 0 || stage > 7) {
+    return NextResponse.json({ error: "Stage must be 0-7" }, { status: 400 });
+  }
+
+  // Get current team
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: { businessStage: true, name: true },
+  });
+
+  if (!team) {
+    return NextResponse.json({ error: "Team not found" }, { status: 404 });
+  }
+
+  // Only allow advancing forward by one step (no skipping)
+  if (stage !== team.businessStage + 1) {
+    return NextResponse.json({
+      error: stage <= team.businessStage
+        ? "Cannot move backwards"
+        : "Can only advance one stage at a time",
+    }, { status: 400 });
+  }
+
+  // ── GATING: Verify all checklist items for CURRENT stage are complete ──
+  const currentStage = team.businessStage;
+  const requiredItems = STAGE_ITEM_COUNTS[currentStage] || 0;
+
+  const completedChecks = await prisma.formationCheck.count({
+    where: {
+      teamId,
+      stageId: currentStage,
+      isCompleted: true,
+    },
+  });
+
+  if (completedChecks < requiredItems) {
+    const remaining = requiredItems - completedChecks;
+    return NextResponse.json({
+      error: `Complete all checklist items before advancing. ${remaining} item${remaining > 1 ? "s" : ""} remaining in the current stage.`,
+      completedItems: completedChecks,
+      totalItems: requiredItems,
+      gated: true,
+    }, { status: 400 });
+  }
+
+  // All checks passed — advance the stage
+  const updated = await prisma.team.update({
+    where: { id: teamId },
+    data: { businessStage: stage },
+    select: { id: true, businessStage: true, name: true },
+  });
+
+  // Notify other members
+  const otherMembers = await prisma.teamMember.findMany({
+    where: { teamId, userId: { not: user.id }, status: { not: "left" } },
+  });
+
+  const stageNames = [
+    "Ideation", "Team Formation", "Market Validation", "Business Planning",
+    "Legal Formation", "Financial Setup", "Compliance", "Launch Ready",
+  ];
+
+  const advancerName = user.displayName || user.firstName || "A teammate";
+  for (const member of otherMembers) {
+    await prisma.notification.create({
+      data: {
+        userId: member.userId,
+        type: "team_stage",
+        title: `${updated.name} advanced!`,
+        content: `${advancerName} moved the team to "${stageNames[stage]}" stage. All checklist items for "${stageNames[currentStage]}" were completed.`,
+        actionUrl: `/team/${teamId}`,
+        actionText: "View Progress",
+      },
+    });
+  }
+
+  return NextResponse.json({ team: updated });
+}
+APIEOF
+
+echo "  Updated /api/team/[id]/stage/route.ts with gating"
+
+# ──────────────────────────────────────────────
+# 5. Rewrite team detail page with interactive checklist
+# ──────────────────────────────────────────────
+echo "  Rewriting /team/[id]/page.tsx with gated checklist..."
+
+cat > "app/team/[id]/page.tsx" << 'PAGEEOF'
 "use client";
 
 import NotificationBell from "@/components/NotificationBell";
@@ -872,3 +1267,354 @@ export default function TeamDetailPage() {
     </div>
   );
 }
+PAGEEOF
+
+echo "  Created updated /team/[id]/page.tsx with gated checklist"
+
+# ──────────────────────────────────────────────
+# 6. CSS — Checklist gating styles
+# ──────────────────────────────────────────────
+echo "  Adding checklist gating styles..."
+
+cat >> app/globals.css << 'CSSEOF'
+
+/* ========================================
+   FORMATION CHECKLIST GATING (Phase 2.6b)
+   ======================================== */
+
+/* ── Progress badge on timeline dots ────── */
+.fj-progress-badge {
+  font-size: 0.6rem;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.fj-done-badge {
+  font-size: 0.58rem;
+  color: #34d399;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ── Checklist Panel ────────────────────── */
+.fj-checklist-panel {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 12px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fj-checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.fj-checklist-header > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fj-checklist-icon { font-size: 1.2rem; }
+
+.fj-checklist-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.fj-checklist-complete-badge {
+  font-size: 0.7rem;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.fj-checklist-counter {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+.fj-counter-done {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.fj-checklist-desc {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+/* ── Progress Bar ───────────────────────── */
+.fj-progress-bar {
+  height: 6px;
+  background: rgba(100, 116, 139, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.fj-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22d3ee, #34f5c5);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* ── Checklist Items ────────────────────── */
+.fj-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.fj-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.fj-item:hover {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.fj-item-done {
+  opacity: 0.7;
+}
+
+.fj-item-locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.fj-item-check {
+  width: 18px;
+  height: 18px;
+  accent-color: #22d3ee;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.fj-item-locked .fj-item-check {
+  cursor: not-allowed;
+}
+
+.fj-item-label {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.3;
+}
+
+.fj-item-done .fj-item-label {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+.fj-item-date {
+  font-size: 0.65rem;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* ── Resources Links ────────────────────── */
+.fj-resources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(100, 116, 139, 0.12);
+  margin-bottom: 16px;
+}
+
+.fj-resources-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.fj-resource-link {
+  font-size: 0.75rem;
+  color: #22d3ee;
+  text-decoration: none;
+  padding: 3px 10px;
+  background: rgba(34, 211, 238, 0.06);
+  border: 1px solid rgba(34, 211, 238, 0.12);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.fj-resource-link:hover {
+  background: rgba(34, 211, 238, 0.12);
+}
+
+/* ── Advance Section ────────────────────── */
+.fj-advance-section {
+  padding-top: 14px;
+  border-top: 1px solid rgba(100, 116, 139, 0.12);
+}
+
+.fj-advance-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.fj-advance-ready {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 211, 238, 0.2));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.fj-advance-ready:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(34, 211, 238, 0.3));
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
+}
+
+.fj-advance-ready:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fj-advance-locked {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: rgba(100, 116, 139, 0.08);
+  border: 1px dashed rgba(100, 116, 139, 0.25);
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.fj-lock-icon {
+  font-size: 1rem;
+}
+
+.fj-launch-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  color: #34d399;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ── Mobile ─────────────────────────────── */
+@media (max-width: 768px) {
+  .fj-checklist-panel {
+    padding: 14px;
+  }
+  .fj-item {
+    padding: 8px 10px;
+  }
+  .fj-resources {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+CSSEOF
+
+echo "  Added checklist gating styles"
+
+# ──────────────────────────────────────────────
+# 7. Build check
+# ──────────────────────────────────────────────
+echo ""
+echo "Running build check..."
+npx next build 2>&1 | tail -10
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "WARNING: Build had issues. Check errors above."
+  echo "You can revert with: git checkout ."
+  exit 1
+fi
+
+# ──────────────────────────────────────────────
+# 8. Commit and deploy
+# ──────────────────────────────────────────────
+git add .
+git commit -m "feat: Phase 2.6b — Formation checklist gating
+
+Checklist items now REQUIRED before advancing to next stage:
+- FormationCheck model tracks per-team item completion
+- Records who completed each item and when
+- Stage advancement API validates all items complete
+- Returns specific error with remaining count if incomplete
+
+Interactive team checklist UI:
+- Expandable panel under timeline shows items for each stage
+- Checkboxes toggle completion with optimistic updates
+- Progress bar fills as items are checked off
+- Counter badge (e.g. '3/5') on timeline dots
+- Lock icon and message when advance is blocked
+- Green 'Advance' button appears only when all items done
+- Past stages show completed state with dates
+- Resources links inline for each stage
+
+Schema: +FormationCheck model (teamId, stageId, itemIndex, completedBy)
+API: GET/PUT /api/team/[id]/checklist
+Updated: /api/team/[id]/stage now enforces gating"
+
+git push origin main
+
+echo ""
+echo "Phase 2.6b — Formation Checklist Gating deployed!"
+echo ""
+echo "  How it works:"
+echo "    1. Each formation stage has 4-6 required checklist items"
+echo "    2. Any team member can check/uncheck items"
+echo "    3. All items must be checked to unlock 'Advance' button"
+echo "    4. Attempting to advance via API without completion returns 400"
+echo "    5. Past stages show completed items with completion dates"
+echo ""
+echo "  Item counts per stage:"
+echo "    Stage 0 (Ideation):         4 items"
+echo "    Stage 1 (Team Formation):   5 items"
+echo "    Stage 2 (Market Validation): 5 items"
+echo "    Stage 3 (Business Planning): 5 items"
+echo "    Stage 4 (Legal Formation):  5 items"
+echo "    Stage 5 (Financial Setup):  5 items"
+echo "    Stage 6 (Compliance):       6 items"
+echo "    Stage 7 (Launch Ready):     6 items"
+echo "    Total:                      41 items across all stages"

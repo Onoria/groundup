@@ -263,6 +263,7 @@ model Team {
   members         TeamMember[]
   messages        Message[]
   milestones      Milestone[]
+  formationChecks FormationCheck[]
   
   @@index([stage])
   @@index([isActive])
@@ -660,3 +661,26 @@ model UserCredential {
 // CREDENTIAL & XP SYSTEM
 // ==========================================
 
+// ==========================================
+// FORMATION CHECKLIST (Phase 2.6b)
+// ==========================================
+
+model FormationCheck {
+  id          String    @id @default(cuid())
+  teamId      String
+  stageId     Int       // 0-7 (formation stage)
+  itemIndex   Int       // Index within stage's checklist
+  
+  isCompleted Boolean   @default(false)
+  completedBy String?   // User ID who checked it
+  completedAt DateTime?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, stageId, itemIndex])
+  @@index([teamId, stageId])
+  @@map("formation_checks")
+}
