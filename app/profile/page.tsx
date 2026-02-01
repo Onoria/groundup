@@ -76,6 +76,21 @@ const SKILL_CATALOG: Record<string, string[]> = {
     "Project Management", "Supply Chain", "Quality Assurance",
     "Legal", "HR", "Administration",
   ],
+  trades: [
+    "Commercial Electrician", "Industrial Electrician", "Fire Alarm Systems", "Low Voltage Systems",
+    "Commercial Plumber", "Pipefitter", "Steamfitter", "Medical Gas Systems",
+    "Commercial HVAC", "Refrigeration Technician", "Controls Technician",
+    "Commercial Carpenter", "Concrete Formwork", "Commercial Cabinetry",
+    "Commercial Glazier", "Structural Glazing",
+    "Structural Welder", "Pipe Welder", "Ironworker", "Sheet Metal Worker",
+    "Commercial Mason", "Concrete Finisher", "Tile Setter (Commercial)",
+    "Commercial Roofer", "Waterproofing Specialist",
+    "Commercial Painter", "Industrial Coatings",
+    "Heavy Equipment Operator", "Crane Operator",
+    "Elevator Mechanic", "Sprinkler Fitter", "Insulation Worker", "Scaffolding Erector",
+    "Commercial General Contractor", "Construction Superintendent",
+    "Construction Estimator", "Safety Manager (Construction)",
+  ],
 };
 
 /* ────────────────────────────────────────────
@@ -95,6 +110,8 @@ const INDUSTRIES = [
   "AI/ML", "Cybersecurity", "CleanTech", "Gaming", "Social Media",
   "Real Estate", "Logistics", "FoodTech", "Biotech", "Hardware",
   "Marketplace", "Developer Tools", "Consumer Apps",
+  "Commercial Construction", "Industrial Construction", "MEP (Mechanical/Electrical/Plumbing)",
+  "Infrastructure", "Energy & Utilities", "Manufacturing", "Government Contracting",
 ];
 
 const ROLES = [
@@ -102,6 +119,12 @@ const ROLES = [
   "Full-Stack Developer", "Frontend Developer", "Backend Developer",
   "Designer", "Product Manager", "Marketing Lead",
   "Sales Lead", "Data Scientist", "DevOps Engineer",
+  "Electrician", "Plumber", "HVAC Technician", "Carpenter",
+  "Welder", "Glazier", "Mason", "Roofer", "Painter",
+  "Heavy Equipment Operator", "Crane Operator",
+  "General Contractor", "Superintendent", "Foreman",
+  "Estimator", "Safety Manager", "Ironworker",
+  "Sprinkler Fitter", "Elevator Mechanic", "Sheet Metal Worker",
 ];
 
 const PROFICIENCY_LEVELS = [
@@ -772,8 +795,8 @@ function copyReferral() {
 
               {/* Skill catalog */}
               {Object.entries(SKILL_CATALOG).map(([category, skills]) => (
-                <div key={category} className="skill-category">
-                  <h3>{category}</h3>
+                <div key={category} className={`skill-category ${category === "trades" ? "skill-category-trades" : ""}`}>
+                  <h3>{category === "trades" ? "🔨 Trades (Commercial)" : category}</h3>
                   <div className="skill-grid">
                     {skills.map((skill) => (
                       <button

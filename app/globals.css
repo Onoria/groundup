@@ -4276,3 +4276,23 @@
     font-size: 0.7rem;
   }
 }
+
+/* Trade skill category */
+.skill-category-trades h3 {
+  color: #fbbf24 !important;
+}
+
+.skill-category-trades .skill-pill {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.skill-category-trades .skill-pill:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.skill-category-trades .skill-pill.selected {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
