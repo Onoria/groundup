@@ -35,6 +35,12 @@ model User {
   avatarUrl         String?
   bio               String?   @db.Text
   
+  // Citizenship & Location
+  usCitizenAttested Boolean   @default(false)  // Must be true to use platform
+  attestedAt        DateTime?                   // When they attested
+  stateOfResidence  String?                     // US state abbreviation
+  licenseState      String?                     // State where trade license held
+
   // Location & Availability
   location          String?
   timezone          String?
@@ -56,6 +62,12 @@ model User {
   lookingForTeam    Boolean   @default(true)
   preferredRoles    String[]  // Array of role IDs user is interested in
   industries        String[]  // Industries of interest
+  
+  // Mentor System
+  isMentor          Boolean   @default(false)
+  mentorSince       DateTime?
+  mentorBio         String?   @db.Text  // Why they want to mentor
+  seekingMentor     Boolean   @default(false) // Looking for a mentor
   
   // Mentor System
   isMentor          Boolean   @default(false)
@@ -106,7 +118,7 @@ model User {
 model Skill {
   id          String   @id @default(cuid())
   name        String   @unique
-  category    String   // "technical" | "business" | "creative" | "operations"
+  category    String   // "technical" | "business" | "creative" | "operations" | "trades"
   subcategory String?
   description String?  @db.Text
   
@@ -136,6 +148,10 @@ model UserSkill {
   xp              Int       @default(0)
   level           Int       @default(1) // 1=Novice, 2=Apprentice, 3=Journeyman, 4=Expert, 5=Master, 6=Grandmaster
   
+  // XP & Level
+  xp              Int       @default(0)
+  level           Int       @default(1) // 1=Novice, 2=Apprentice, 3=Journeyman, 4=Expert, 5=Master, 6=Grandmaster
+  
   // Verification status
   isVerified      Boolean   @default(false)
   verifiedAt      DateTime?
@@ -147,6 +163,8 @@ model UserSkill {
   
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   skill           Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  
+  credentials     UserCredential[]
   
   credentials     UserCredential[]
   
@@ -565,6 +583,81 @@ model UserWorkingStyle {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("user_working_styles")
+}
+
+// ==========================================
+// CREDENTIAL & XP SYSTEM
+// ==========================================
+
+model Credential {
+  id              String    @id @default(cuid())
+  name            String    @unique // "PMP", "AWS Solutions Architect", "MBA", etc.
+  shortName       String?   // "PMP", "AWS-SA", etc.
+  category        String    // "certification" | "education" | "license" | "bootcamp"
+  issuer          String?   // "PMI", "Amazon", "Harvard", etc.
+  
+  // XP configuration
+  baseXp          Int       // XP when verified
+  unverifiedXp    Int       // XP when self-reported (lower)
+  
+  // Skill mapping
+  skillCategory   String    // Maps to Skill.category: "technical" | "business" | "creative" | "operations"
+  skillKeywords   String[]  // Keywords to match against skill names, e.g. ["project management", "agile"]
+  
+  // Metadata
+  description     String?   @db.Text
+  verifyUrl       String?   // URL where credential can be looked up
+  isActive        Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  userCredentials UserCredential[]
+  
+  @@index([category])
+  @@index([skillCategory])
+  @@map("credentials")
+}
+
+model UserCredential {
+  id              String    @id @default(cuid())
+  userId          String
+  userSkillId     String?   // Links to specific UserSkill for XP
+  credentialId    String?   // From catalog (null if custom)
+  
+  // Credential details
+  name            String    // Display name
+  category        String    // "certification" | "education" | "license" | "bootcamp" | "reference" | "portfolio"
+  issuer          String?
+  
+  // Dates
+  dateEarned      DateTime?
+  expiresAt       DateTime?
+  
+  // Proof
+  proofUrl        String?   // Link to certificate, badge, etc.
+  proofNotes      String?   @db.Text
+  
+  // Verification
+  isVerified      Boolean   @default(false)
+  verifiedAt      DateTime?
+  verifiedBy      String?   // Admin who verified
+  
+  // XP
+  xpAwarded       Int       @default(0)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userSkill       UserSkill? @relation(fields: [userSkillId], references: [id], onDelete: SetNull)
+  credential      Credential? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([userSkillId])
+  @@index([credentialId])
+  @@index([isVerified])
+  @@map("user_credentials")
 }
 
 // ==========================================
