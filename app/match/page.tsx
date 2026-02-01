@@ -1,6 +1,7 @@
 "use client";
 
 import NotificationBell from "@/components/NotificationBell";
+import { getTrackConfig } from "@/lib/tracks";
 
 import { useState, useEffect, useCallback } from "react";
 
@@ -48,6 +49,7 @@ type Tab = "discover" | "interested" | "mutual";
 
 export default function MatchPage() {
   const [tab, setTab] = useState<Tab>("discover");
+  const [userTrack, setUserTrack] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
@@ -78,6 +80,10 @@ export default function MatchPage() {
   useEffect(() => {
     loadMatches();
   }, [loadMatches]);
+
+  useEffect(() => {
+    fetch("/api/track").then((r) => r.json()).then((d) => { if (d.track) setUserTrack(d.track); }).catch(() => {});
+  }, []);
 
   // Run matching algorithm
   async function runMatching() {
@@ -161,9 +167,9 @@ export default function MatchPage() {
       <main className="match-main">
         {/* Hero */}
         <section className="match-hero">
-          <h2 className="match-hero-title">Find Your Team</h2>
+          <h2 className="match-hero-title">{userTrack === "trades" ? "Find Your Business Partner" : "Find Your Team"}</h2>
           <p className="match-hero-sub">
-            Our algorithm scores compatibility across skills, working style, industry, and logistics
+            {userTrack === "trades" ? "Matching you with licensed professionals based on skills, experience, and project fit" : "Our algorithm scores compatibility across skills, working style, industry, and logistics"}
           </p>
           <button
             className="match-run-btn"

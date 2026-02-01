@@ -67,6 +67,8 @@ export async function POST() {
         isBanned: false,
         deletedAt: null,
         onboardingCompletedAt: { not: null },
+        // Only match within same track
+        ...(me.track ? { track: me.track } : {}),
       },
       include: USER_INCLUDE,
     });

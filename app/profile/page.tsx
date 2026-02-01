@@ -1,5 +1,8 @@
 "use client";
 
+import { SKILL_CATALOG as TRACK_SKILL_CATALOGS, TRACK_CONFIG, getTrackConfig } from "@/lib/tracks";
+import type { Track } from "@/lib/tracks";
+
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
@@ -203,6 +206,7 @@ export default function ProfilePage() {
   } | null>(null);
   const [mentorBioInput, setMentorBioInput] = useState("");
   const [mentorLoading, setMentorLoading] = useState(false);
+  const [userTrack, setUserTrack] = useState<Track | null>(null);
 
   /* ── Fetch profile ───────────────────────── */
   const fetchProfile = useCallback(async () => {
@@ -223,6 +227,13 @@ export default function ProfilePage() {
     if (isLoaded && !clerkUser) { router.push("/"); return; }
     if (isLoaded && clerkUser) fetchProfile();
   }, [isLoaded, clerkUser, router, fetchProfile]);
+
+  useEffect(() => {
+    fetch("/api/track")
+      .then((r) => r.json())
+      .then((data) => { if (data.track) setUserTrack(data.track); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/credentials")
@@ -549,7 +560,12 @@ function copyReferral() {
             <div className="profile-identity">
               <h1 className="profile-name">
                 {profile.firstName} {profile.lastName}
-              </h1>
+              
+                  {userTrack && (
+                    <span className={`track-badge-profile track-badge-${userTrack}`}>
+                      {userTrack === "startup" ? "🚀 Startup" : "🔨 Trades"}
+                    </span>
+                  )}</h1>
               {profile.displayName && (
                 <p className="profile-display-name">@{profile.displayName}</p>
               )}
@@ -779,7 +795,7 @@ function copyReferral() {
               )}
 
               {/* Skill catalog */}
-              {Object.entries(SKILL_CATALOG).map(([category, skills]) => (
+              {Object.entries(userTrack ? TRACK_SKILL_CATALOGS[userTrack] : {}).map(([category, skills]) => (
                 <div key={category} className={`skill-category ${category === "trades" ? "skill-category-trades" : ""}`}>
                   <h3>{category === "trades" ? "🔨 Trades (Commercial)" : category}</h3>
                   <div className="skill-grid">
@@ -1072,7 +1088,7 @@ function copyReferral() {
                 <h3>Industries of Interest</h3>
                 <p className="form-hint">Select all that apply</p>
                 <div className="skill-grid">
-                  {INDUSTRIES.map((ind) => (
+                  {(userTrack ? TRACK_CONFIG[userTrack].industries : []).map((ind) => (
                     <button
                       key={ind}
                       type="button"
@@ -1092,9 +1108,9 @@ function copyReferral() {
               {/* Roles needed */}
               <div className="form-section">
                 <h3>Roles You&apos;re Looking For</h3>
-                <p className="form-hint">What roles do you want on your team?</p>
+                <p className="form-hint">What roles are you looking for?</p>
                 <div className="skill-grid">
-                  {ROLES.map((role) => (
+                  {(userTrack ? TRACK_CONFIG[userTrack].roles : []).map((role) => (
                     <button
                       key={role}
                       type="button"
