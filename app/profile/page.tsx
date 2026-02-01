@@ -174,7 +174,7 @@ export default function ProfilePage() {
     firstName: "", lastName: "", displayName: "", bio: "",
     location: "", timezone: "", isRemote: true, availability: "",
   });
-  const [selectedSkills, setSelectedSkills] = useState<Record<string, string>>({});
+  const [selectedSkills, setSelectedSkills] = useState<Record<string, boolean>>({});
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [lookingForTeam, setLookingForTeam] = useState(true);
@@ -265,7 +265,7 @@ export default function ProfilePage() {
       availability: u.availability || "",
     });
     const skillMap: Record<string, string> = {};
-    u.skills.forEach((us) => { skillMap[us.skill.name] = us.proficiency; });
+    u.skills.forEach((us) => { skillMap[us.skill.name] = true; });
     setSelectedSkills(skillMap);
     setSelectedIndustries(u.industries || []);
     setSelectedRoles(u.rolesLookingFor || []);
@@ -305,8 +305,10 @@ export default function ProfilePage() {
   async function saveSkills() {
     setSaving(true); setError("");
     try {
-      const skills = Object.entries(selectedSkills).map(([name, proficiency]) => ({
-        name, proficiency,
+      const skills = Object.entries(selectedSkills)
+        .filter(([, selected]) => selected)
+        .map(([name]) => ({
+        name,
       }));
       const res = await fetch("/api/profile/skills", {
         method: "PUT",
@@ -366,13 +368,9 @@ export default function ProfilePage() {
   function toggleSkill(name: string) {
     setSelectedSkills((prev) => {
       const next = { ...prev };
-      if (next[name]) { delete next[name]; } else { next[name] = "intermediate"; }
+      if (next[name]) { delete next[name]; } else { next[name] = true; }
       return next;
     });
-  }
-
-  function setSkillProficiency(name: string, level: string) {
-    setSelectedSkills((prev) => ({ ...prev, [name]: level }));
   }
 
   /* ── Cancel editing ──────────────────────── */
@@ -753,32 +751,19 @@ function copyReferral() {
 
           {editingSection === "skills" ? (
             <div className="profile-skills-editor">
-              <p className="form-hint">Select your skills and set proficiency levels.</p>
+              <p className="form-hint">Select your skills. Levels are determined by verified credentials and experience.</p>
 
-              {/* Selected skills with proficiency */}
-              {Object.keys(selectedSkills).length > 0 && (
+              {/* Selected skills */}
+              {Object.keys(selectedSkills).filter((k) => selectedSkills[k]).length > 0 && (
                 <div className="profile-selected-skills">
                   <h4 className="profile-subsection-title">
-                    Selected ({Object.keys(selectedSkills).length})
+                    Selected ({Object.keys(selectedSkills).filter((k) => selectedSkills[k]).length})
                   </h4>
-                  <div className="profile-skill-proficiency-list">
-                    {Object.entries(selectedSkills).map(([name, prof]) => (
-                      <div key={name} className="profile-skill-proficiency-row">
+                  <div className="profile-skill-selected-list">
+                    {Object.entries(selectedSkills).filter(([, v]) => v).map(([name]) => (
+                      <div key={name} className="profile-skill-selected-row">
                         <span className="profile-skill-name">{name}</span>
-                        <div className="profile-proficiency-selector">
-                          {PROFICIENCY_LEVELS.map((level) => (
-                            <button
-                              key={level.value}
-                              type="button"
-                              className={`profile-proficiency-btn ${prof === level.value ? "active" : ""}`}
-                              style={prof === level.value ? { borderColor: level.color, color: level.color } : {}}
-                              onClick={() => setSkillProficiency(name, level.value)}
-                              title={level.label}
-                            >
-                              {level.label}
-                            </button>
-                          ))}
-                        </div>
+                        <span className="profile-skill-xp-hint">Level set by XP</span>
                         <button
                           type="button"
                           className="profile-skill-remove"
@@ -846,13 +831,9 @@ function copyReferral() {
                                 Verify
                               </button>
                             )}
-                            <span
-                              className="profile-proficiency-dot"
-                              title={us.proficiency}
-                              style={{
-                                background: PROFICIENCY_LEVELS.find((l) => l.value === us.proficiency)?.color || "#94a3b8",
-                              }}
-                            />
+                            {(us as any).xp > 0 && (
+                              <span className="skill-xp-tag">⚡{(us as any).xp}</span>
+                            )}
                           </div>
                         ))}
                       </div>

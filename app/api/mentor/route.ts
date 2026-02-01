@@ -23,14 +23,18 @@ interface EligibilityResult {
 function checkEligibility(
   skills: { proficiency: string; yearsExperience: number | null; isVerified: boolean }[]
 ): EligibilityResult {
-  const expertSkills = skills.filter((s) => s.proficiency === "expert").length;
+  const expertSkills = skills.filter((s: any) => (s.level ?? 1) >= 4).length; // Expert = 150+ XP
   const maxYears = Math.max(0, ...skills.map((s) => s.yearsExperience ?? 0));
   const totalYears = skills.reduce((sum, s) => sum + (s.yearsExperience ?? 0), 0);
   const verifiedSkills = skills.filter((s) => s.isVerified).length;
 
   const reasons: string[] = [];
 
-  if (expertSkills >= 1) reasons.push("Expert-level proficiency");
+  if (expertSkills >= 1) reasons.push("Expert XP level (150+ XP)");
+
+  // Master level bonus
+  const hasMasterLevel = skills.some((s: any) => (s.level ?? 1) >= 5);
+  if (hasMasterLevel) reasons.push("Master-level skill (300+ XP)");
   if (maxYears >= 5) reasons.push(`${maxYears}+ years in a single skill`);
   if (totalYears >= 8) reasons.push(`${totalYears} cumulative years of experience`);
   if (verifiedSkills >= 3) reasons.push(`${verifiedSkills} verified skills`);
@@ -61,6 +65,8 @@ export async function GET() {
           proficiency: true,
           yearsExperience: true,
           isVerified: true,
+          xp: true,
+          level: true,
         },
       },
     },
@@ -101,6 +107,8 @@ export async function POST(req: Request) {
           proficiency: true,
           yearsExperience: true,
           isVerified: true,
+          xp: true,
+          level: true,
         },
       },
     },

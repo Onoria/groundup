@@ -24,7 +24,7 @@ export async function PUT(request: Request) {
     }
 
     // Validate each skill entry
-    const validProficiencies = ["beginner", "intermediate", "advanced", "expert"];
+    // Proficiency no longer self-selected — determined by XP system
     for (const skill of skills) {
       if (!skill.name || typeof skill.name !== "string") {
         return NextResponse.json(
@@ -32,12 +32,7 @@ export async function PUT(request: Request) {
           { status: 400 }
         );
       }
-      if (skill.proficiency && !validProficiencies.includes(skill.proficiency)) {
-        return NextResponse.json(
-          { error: `Invalid proficiency level: ${skill.proficiency}` },
-          { status: 400 }
-        );
-      }
+
     }
 
     const user = await prisma.user.findUnique({
@@ -57,7 +52,7 @@ export async function PUT(request: Request) {
           update: {},
           create: { name: s.name, category },
         });
-        return { skill, proficiency: s.proficiency || "intermediate" };
+        return { skill, proficiency: "beginner" };
       })
     );
 
