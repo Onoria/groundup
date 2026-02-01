@@ -237,6 +237,10 @@ model Team {
   
   // Team details
   industry        String?
+  businessIdea    String?   @db.Text
+  missionStatement String?  @db.Text
+  targetMarket    String?
+  businessStage   Int       @default(0) // 0-7 formation journey
   stage           String    @default("forming") // "forming" | "trial" | "committed" | "incorporated" | "dissolved"
   
   // Trial period (21 days)
