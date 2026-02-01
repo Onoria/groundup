@@ -57,6 +57,12 @@ model User {
   preferredRoles    String[]  // Array of role IDs user is interested in
   industries        String[]  // Industries of interest
   
+  // Mentor System
+  isMentor          Boolean   @default(false)
+  mentorSince       DateTime?
+  mentorBio         String?   @db.Text  // Why they want to mentor
+  seekingMentor     Boolean   @default(false) // Looking for a mentor
+  
   // Privacy Settings
   profileVisibility String    @default("public") // "public" | "members" | "private"
   showEmail         Boolean   @default(false)

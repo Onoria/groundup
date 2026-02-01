@@ -1,71 +1,416 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { setQueued } from '@/app/lib/updateMetadata'
-import { UserButton } from '@clerk/nextjs'
-import Link from 'next/link'
+import { useState, useEffect, useCallback } from "react";
+
+interface MatchCandidate {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  location: string | null;
+  availability: string | null;
+  isRemote: boolean;
+  industries: string[];
+  skills: {
+    name: string;
+    category: string;
+    proficiency: string;
+    isVerified: boolean;
+  }[];
+  hasWorkingStyle?: boolean;
+}
+
+interface MatchBreakdown {
+  skillComplementarity: number;
+  workingStyleCompat: number;
+  industryOverlap: number;
+  logisticsCompat: number;
+  mutualDemand: number;
+  total: number;
+  skillDetails: { needed: string; matched: string; verified: boolean }[];
+  sharedIndustries: string[];
+}
+
+interface MatchResult {
+  matchId: string;
+  score: number;
+  status: string;
+  breakdown: MatchBreakdown | { myPerspective: MatchBreakdown };
+  candidate: MatchCandidate;
+  expiresAt?: string;
+}
+
+type Tab = "discover" | "interested" | "mutual";
 
 export default function MatchPage() {
-  const [isQueued, setIsQueued] = useState(false)
-  const [isPending, setIsPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [tab, setTab] = useState<Tab>("discover");
+  const [matches, setMatches] = useState<MatchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState("");
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: string; msg: string } | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const joinPool = async () => {
-    setError(null); setIsPending(true)
-    try { await setQueued(true); setIsQueued(true) }
-    catch { setError('Failed to join — please try again') }
-    finally { setIsPending(false) }
+  const showToast = (type: string, msg: string) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Load existing matches
+  const loadMatches = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/match/list");
+      const data = await res.json();
+      if (data.matches) setMatches(data.matches);
+    } catch {
+      setError("Failed to load matches");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMatches();
+  }, [loadMatches]);
+
+  // Run matching algorithm
+  async function runMatching() {
+    setRunning(true);
+    setError("");
+    try {
+      const res = await fetch("/api/match/run", { method: "POST" });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        showToast("success", `Found ${data.matches.length} matches out of ${data.total} eligible`);
+        await loadMatches();
+      }
+    } catch {
+      setError("Failed to run matching");
+    } finally {
+      setRunning(false);
+    }
   }
 
-  const leavePool = async () => {
-    setError(null); setIsPending(true)
-    try { await setQueued(false); setIsQueued(false) }
-    finally { setIsPending(false) }
+  // Respond to match
+  async function respond(matchId: string, action: "interested" | "rejected") {
+    setRespondingId(matchId);
+    try {
+      const res = await fetch("/api/match/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId, action }),
+      });
+      const data = await res.json();
+      if (data.mutual) {
+        showToast("mutual", "🎉 Mutual match! You can now connect.");
+      } else if (action === "interested") {
+        showToast("success", "Marked as interested!");
+      }
+      await loadMatches();
+    } catch {
+      showToast("error", "Failed to respond");
+    } finally {
+      setRespondingId(null);
+    }
+  }
+
+  // Filter matches by tab
+  const discovered = matches.filter(
+    (m) => m.status === "suggested" || m.status === "viewed"
+  );
+  const interested = matches.filter((m) => m.status === "interested");
+  const mutual = matches.filter((m) => m.status === "accepted");
+
+  const displayMatches =
+    tab === "discover" ? discovered : tab === "interested" ? interested : mutual;
+
+  function getBreakdown(m: MatchResult): MatchBreakdown | null {
+    if (!m.breakdown) return null;
+    if ("myPerspective" in m.breakdown) return m.breakdown.myPerspective;
+    return m.breakdown as MatchBreakdown;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
-      <header className="border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-cyan-400">GroundUp</Link>
-          <UserButton afterSignOutUrl="/" />
+    <div className="match-container">
+      {/* Header */}
+      <header className="match-header">
+        <div className="match-header-content">
+          <a href="/dashboard" className="match-back">← Dashboard</a>
+          <h1 className="match-logo">GroundUp</h1>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto pt-32 px-6 text-center">
-        <h1 className="text-5xl font-light tracking-tight text-cyan-400 mb-12">
-          Ready to meet your co-founders?
-        </h1>
+      {/* Toast */}
+      {toast && (
+        <div className={`match-toast match-toast-${toast.type}`}>
+          {toast.msg}
+        </div>
+      )}
 
-        {error && (
-          <div className="mb-10 glass-card bg-red-900/20 border-red-800 text-red-400 px-8 py-5">
-            {error}
-          </div>
-        )}
-
-        {!isQueued ? (
+      <main className="match-main">
+        {/* Hero */}
+        <section className="match-hero">
+          <h2 className="match-hero-title">Find Your Team</h2>
+          <p className="match-hero-sub">
+            Our algorithm scores compatibility across skills, working style, industry, and logistics
+          </p>
           <button
-            onClick={joinPool}
-            disabled={isPending}
-            className="btn-primary disabled:opacity-50 text-xl px-16 py-6"
+            className="match-run-btn"
+            onClick={runMatching}
+            disabled={running}
           >
-            {isPending ? 'Joining...' : 'Join Matching Pool'}
+            {running ? (
+              <>
+                <span className="match-spinner" />
+                Scanning...
+              </>
+            ) : (
+              <>🚀 Run Matching Algorithm</>
+            )}
           </button>
-        ) : (
-          <div className="space-y-8 glass-card p-8">
-            <div className="text-3xl text-gray-300">
-              You're in the matching pool
-            </div>
-            <button
-              onClick={leavePool}
-              disabled={isPending}
-              className="text-gray-500 hover:text-white underline transition"
-            >
-              Leave pool
-            </button>
+        </section>
+
+        {/* Tabs */}
+        <div className="match-tabs">
+          <button
+            className={`match-tab ${tab === "discover" ? "match-tab-active" : ""}`}
+            onClick={() => setTab("discover")}
+          >
+            Discover
+            {discovered.length > 0 && (
+              <span className="match-tab-count">{discovered.length}</span>
+            )}
+          </button>
+          <button
+            className={`match-tab ${tab === "interested" ? "match-tab-active" : ""}`}
+            onClick={() => setTab("interested")}
+          >
+            Interested
+            {interested.length > 0 && (
+              <span className="match-tab-count">{interested.length}</span>
+            )}
+          </button>
+          <button
+            className={`match-tab ${tab === "mutual" ? "match-tab-active" : ""}`}
+            onClick={() => setTab("mutual")}
+          >
+            Mutual
+            {mutual.length > 0 && (
+              <span className="match-tab-count match-tab-mutual">{mutual.length}</span>
+            )}
+          </button>
+        </div>
+
+        {/* Error */}
+        {error && <div className="match-error">{error}</div>}
+
+        {/* Loading */}
+        {loading && <div className="match-loading">Loading matches...</div>}
+
+        {/* Empty states */}
+        {!loading && displayMatches.length === 0 && (
+          <div className="match-empty">
+            {tab === "discover" ? (
+              <>
+                <span className="match-empty-icon">🔍</span>
+                <p>No new matches yet</p>
+                <p className="match-empty-hint">
+                  Hit the button above to run the matching algorithm
+                </p>
+              </>
+            ) : tab === "interested" ? (
+              <>
+                <span className="match-empty-icon">⏳</span>
+                <p>No pending interests</p>
+                <p className="match-empty-hint">
+                  Mark matches as interested to see them here
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="match-empty-icon">🤝</span>
+                <p>No mutual matches yet</p>
+                <p className="match-empty-hint">
+                  When both sides show interest, you{"'"}ll connect here
+                </p>
+              </>
+            )}
           </div>
         )}
+
+        {/* Match cards */}
+        <div className="match-grid">
+          {displayMatches.map((m) => {
+            const bd = getBreakdown(m);
+            const c = m.candidate;
+            const expanded = expandedId === m.matchId;
+            const name =
+              c.displayName || [c.firstName, c.lastName].filter(Boolean).join(" ") || "Anonymous";
+
+            return (
+              <div key={m.matchId} className="match-card">
+                {/* Score badge */}
+                <div className="match-score-badge">
+                  <span className="match-score-num">
+                    {Math.round(m.score)}
+                  </span>
+                  <span className="match-score-pct">%</span>
+                </div>
+
+                {/* Candidate info */}
+                <div className="match-card-header">
+                  <div className="match-avatar">
+                    {c.avatarUrl ? (
+                      <img src={c.avatarUrl} alt={name} />
+                    ) : (
+                      <span>{name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <div className="match-card-info">
+                    <h3 className="match-card-name">{name}</h3>
+                    <div className="match-card-meta">
+                      {c.location && <span>📍 {c.location}</span>}
+                      {c.availability && <span>⏰ {c.availability}</span>}
+                      {c.isRemote && <span>🌐 Remote</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                {c.bio && (
+                  <p className="match-card-bio">{c.bio.slice(0, 120)}{c.bio.length > 120 ? "..." : ""}</p>
+                )}
+
+                {/* Skills */}
+                {c.skills.length > 0 && (
+                  <div className="match-card-skills">
+                    {c.skills.slice(0, 5).map((s, i) => (
+                      <span
+                        key={i}
+                        className={`match-skill-tag ${s.isVerified ? "match-skill-verified" : ""}`}
+                      >
+                        {s.name}
+                        {s.isVerified && <span className="match-verified-dot">✓</span>}
+                      </span>
+                    ))}
+                    {c.skills.length > 5 && (
+                      <span className="match-skill-tag match-skill-more">
+                        +{c.skills.length - 5}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Industries */}
+                {bd && bd.sharedIndustries.length > 0 && (
+                  <div className="match-shared-industries">
+                    <span className="match-shared-label">Shared:</span>
+                    {bd.sharedIndustries.map((ind, i) => (
+                      <span key={i} className="match-industry-tag">
+                        {ind}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Score breakdown toggle */}
+                <button
+                  className="match-expand-btn"
+                  onClick={() => setExpandedId(expanded ? null : m.matchId)}
+                >
+                  {expanded ? "Hide Details ▲" : "Score Breakdown ▼"}
+                </button>
+
+                {/* Expanded breakdown */}
+                {expanded && bd && (
+                  <div className="match-breakdown">
+                    <BreakdownBar label="Skills" score={bd.skillComplementarity} max={35} />
+                    <BreakdownBar label="Working Style" score={bd.workingStyleCompat} max={25} />
+                    <BreakdownBar label="Industry" score={bd.industryOverlap} max={15} />
+                    <BreakdownBar label="Logistics" score={bd.logisticsCompat} max={15} />
+                    <BreakdownBar label="Mutual Demand" score={bd.mutualDemand} max={10} />
+
+                    {bd.skillDetails.length > 0 && (
+                      <div className="match-skill-details">
+                        <span className="match-detail-label">Skill matches:</span>
+                        {bd.skillDetails.map((sd, i) => (
+                          <span key={i} className="match-detail-item">
+                            {sd.needed} → {sd.matched}
+                            {sd.verified && " ✓"}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                {(m.status === "suggested" || m.status === "viewed") && (
+                  <div className="match-actions">
+                    <button
+                      className="match-btn match-btn-interested"
+                      onClick={() => respond(m.matchId, "interested")}
+                      disabled={respondingId === m.matchId}
+                    >
+                      {respondingId === m.matchId ? "..." : "👍 Interested"}
+                    </button>
+                    <button
+                      className="match-btn match-btn-pass"
+                      onClick={() => respond(m.matchId, "rejected")}
+                      disabled={respondingId === m.matchId}
+                    >
+                      Pass
+                    </button>
+                  </div>
+                )}
+
+                {m.status === "interested" && (
+                  <div className="match-status-badge match-status-interested">
+                    ⏳ Waiting for their response
+                  </div>
+                )}
+
+                {m.status === "accepted" && (
+                  <div className="match-status-badge match-status-mutual">
+                    🎉 Mutual Match — Ready to connect!
+                  </div>
+                )}
+
+                {/* Expiry */}
+                {m.expiresAt && (m.status === "suggested" || m.status === "viewed") && (
+                  <div className="match-expires">
+                    Expires {new Date(m.expiresAt).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </main>
     </div>
-  )
+  );
+}
+
+function BreakdownBar({ label, score, max }: { label: string; score: number; max: number }) {
+  const pct = Math.round((score / max) * 100);
+  return (
+    <div className="bd-bar-row">
+      <span className="bd-bar-label">{label}</span>
+      <div className="bd-bar-track">
+        <div
+          className="bd-bar-fill"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="bd-bar-score">
+        {score.toFixed(1)}/{max}
+      </span>
+    </div>
+  );
 }

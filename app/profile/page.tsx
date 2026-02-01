@@ -167,6 +167,19 @@ export default function ProfilePage() {
   const [showCredForm, setShowCredForm] = useState(false);
   const [credForm, setCredForm] = useState({ credentialId: "", customName: "", category: "certification", issuer: "", dateEarned: "", proofUrl: "", userSkillId: "" });
   const [credLoading, setCredLoading] = useState(false);
+  const [mentorData, setMentorData] = useState<{
+    isMentor: boolean;
+    mentorSince: string | null;
+    mentorBio: string | null;
+    seekingMentor: boolean;
+    eligibility: {
+      eligible: boolean;
+      reasons: string[];
+      stats: { expertSkills: number; maxYears: number; totalYears: number; verifiedSkills: number };
+    };
+  } | null>(null);
+  const [mentorBioInput, setMentorBioInput] = useState("");
+  const [mentorLoading, setMentorLoading] = useState(false);
 
   /* ── Fetch profile ───────────────────────── */
   const fetchProfile = useCallback(async () => {
@@ -203,6 +216,18 @@ export default function ProfilePage() {
       .then((data) => {
         if (!data.error) setCredentialCatalog(data.catalog || []);
       }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/mentor")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setMentorData(data);
+          setMentorBioInput(data.mentorBio || "");
+        }
+      })
+      .catch(() => {});
   }, []);
 
   function populateForms(u: UserProfile) {
@@ -390,7 +415,50 @@ export default function ProfilePage() {
   const completion = getCompletion();
 
   /* ── Render ──────────────────────────────── */
-  function copyReferral() {
+  
+  async function toggleMentor(activate: boolean) {
+    setMentorLoading(true);
+    try {
+      const res = await fetch("/api/mentor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: activate ? "activate" : "deactivate",
+          mentorBio: mentorBioInput,
+        }),
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setMentorData((prev) => prev ? { ...prev, isMentor: data.isMentor, mentorSince: data.isMentor ? new Date().toISOString() : prev.mentorSince } : prev);
+      }
+    } catch {}
+    setMentorLoading(false);
+  }
+
+  async function toggleSeekingMentor() {
+    const newVal = !mentorData?.seekingMentor;
+    try {
+      await fetch("/api/mentor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seekingMentor: newVal }),
+      });
+      setMentorData((prev) => prev ? { ...prev, seekingMentor: newVal } : prev);
+    } catch {}
+  }
+
+  async function saveMentorBio() {
+    try {
+      await fetch("/api/mentor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateBio", mentorBio: mentorBioInput }),
+      });
+      setMentorData((prev) => prev ? { ...prev, mentorBio: mentorBioInput } : prev);
+    } catch {}
+  }
+
+function copyReferral() {
     const url = `${window.location.origin}?ref=${profile?.id || ""}`;
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
@@ -1210,6 +1278,121 @@ export default function ProfilePage() {
         {/* ── Referral Section ──────────────── */}
         <section className="profile-section referral-section">
           <div className="profile-section-header">
+        {/* ── Mentor Section ─────────────────── */}
+        {mentorData && (
+          <section className="profile-section mentor-section">
+            <div className="profile-section-header">
+              <h2 className="profile-section-title">
+                🎓 Mentor Program
+              </h2>
+              {mentorData.isMentor && (
+                <span className="mentor-active-badge">Active Mentor</span>
+              )}
+            </div>
+
+            {/* Seeking mentor toggle — available to everyone */}
+            <div className="mentor-toggle-row">
+              <div className="mentor-toggle-info">
+                <span className="mentor-toggle-label">I{"'"}m looking for a mentor</span>
+                <span className="mentor-toggle-hint">Get matched with experienced founders</span>
+              </div>
+              <button
+                className={`mentor-toggle-btn ${mentorData.seekingMentor ? "mentor-toggle-on" : ""}`}
+                onClick={toggleSeekingMentor}
+              >
+                <span className="mentor-toggle-thumb" />
+              </button>
+            </div>
+
+            <div className="mentor-divider" />
+
+            {/* Become a mentor — eligibility gated */}
+            {mentorData.eligibility.eligible ? (
+              <div className="mentor-eligible">
+                {!mentorData.isMentor ? (
+                  <>
+                    <div className="mentor-eligible-header">
+                      <span className="mentor-star">⭐</span>
+                      <div>
+                        <p className="mentor-eligible-title">You qualify as a Mentor!</p>
+                        <p className="mentor-eligible-reasons">
+                          {mentorData.eligibility.reasons.join(" · ")}
+                        </p>
+                      </div>
+                    </div>
+                    <textarea
+                      className="mentor-bio-input"
+                      placeholder="Why do you want to mentor? What can you teach? (optional)"
+                      value={mentorBioInput}
+                      onChange={(e) => setMentorBioInput(e.target.value)}
+                      rows={3}
+                    />
+                    <button
+                      className="mentor-activate-btn"
+                      onClick={() => toggleMentor(true)}
+                      disabled={mentorLoading}
+                    >
+                      {mentorLoading ? "Activating..." : "🎓 Become a Mentor"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="mentor-active-info">
+                      <p className="mentor-active-label">You{"'"}re an active mentor</p>
+                      {mentorData.mentorSince && (
+                        <p className="mentor-since">
+                          Since {new Date(mentorData.mentorSince).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <textarea
+                      className="mentor-bio-input"
+                      placeholder="Your mentor bio..."
+                      value={mentorBioInput}
+                      onChange={(e) => setMentorBioInput(e.target.value)}
+                      rows={3}
+                    />
+                    <div className="mentor-btn-row">
+                      <button className="mentor-save-bio-btn" onClick={saveMentorBio}>
+                        Save Bio
+                      </button>
+                      <button
+                        className="mentor-deactivate-btn"
+                        onClick={() => toggleMentor(false)}
+                        disabled={mentorLoading}
+                      >
+                        Step Down
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="mentor-ineligible">
+                <p className="mentor-ineligible-title">Mentor eligibility</p>
+                <p className="mentor-ineligible-desc">
+                  To become a mentor, you need at least one of:
+                </p>
+                <ul className="mentor-req-list">
+                  <li className={mentorData.eligibility.stats.expertSkills >= 1 ? "mentor-req-met" : ""}>
+                    Expert-level proficiency in any skill
+                  </li>
+                  <li className={mentorData.eligibility.stats.maxYears >= 5 ? "mentor-req-met" : ""}>
+                    5+ years experience in a single skill
+                  </li>
+                  <li className={mentorData.eligibility.stats.totalYears >= 8 ? "mentor-req-met" : ""}>
+                    8+ cumulative years across all skills
+                  </li>
+                  <li className={mentorData.eligibility.stats.verifiedSkills >= 3 ? "mentor-req-met" : ""}>
+                    3+ verified skills
+                  </li>
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
+
+
             <h2 className="profile-section-title">Invite Co-Founders</h2>
           </div>
           <p className="referral-desc">

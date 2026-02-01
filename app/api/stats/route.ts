@@ -6,7 +6,7 @@ export const revalidate = 300; // cache 5 min
 export async function GET() {
   try {
     const [activeUsers, activeTeams] = await Promise.all([
-      prisma.user.count({ where: { onboardingComplete: true } }),
+      prisma.user.count({ where: { onboardingCompletedAt: { not: null } } }),
       prisma.team.count(),
     ]);
     return NextResponse.json({ activeUsers, activeTeams });
